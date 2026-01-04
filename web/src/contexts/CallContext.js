@@ -254,12 +254,16 @@ export function CallProvider({ children }) {
         console.log('[CallContext] Call timeout');
         if (activeCallId) logCallEnd(activeCallId, 'missed');
         setIncomingCall(null);
-        setCallState(CALL_STATES.IDLE);
-        setActiveCallId(null);
+        setCallState(CALL_STATES.UNAVAILABLE);
         if (pcRef.current) {
           pcRef.current.close();
           pcRef.current = null;
         }
+        setTimeout(() => {
+          setCallState(prev => prev === CALL_STATES.UNAVAILABLE ? CALL_STATES.IDLE : prev);
+          setActiveCallId(null);
+          initiationRef.current = null;
+        }, 8000); // 8s buffer
         break;
       case 'call_ended':
         console.log('[CallContext] Call ended by peer');
@@ -268,8 +272,12 @@ export function CallProvider({ children }) {
       case 'call_failed':
         console.log('[CallContext] Call failed:', payload.reason);
         if (activeCallId) logCallEnd(activeCallId, 'missed');
-        setCallState(CALL_STATES.ENDED);
-        setTimeout(() => setCallState(prev => prev === CALL_STATES.ENDED ? CALL_STATES.IDLE : prev), 2000);
+        setCallState(CALL_STATES.UNAVAILABLE);
+        setTimeout(() => {
+          setCallState(prev => prev === CALL_STATES.UNAVAILABLE ? CALL_STATES.IDLE : prev);
+          setActiveCallId(null);
+          initiationRef.current = null;
+        }, 8000); // 8s buffer
         break;
     }
   }, [createPeerConnection, sendMessage, endCall, activeCallId]);

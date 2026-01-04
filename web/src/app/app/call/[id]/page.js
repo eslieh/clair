@@ -30,6 +30,7 @@ export default function CallPage({ params }) {
   const remoteVideoRef = useRef(null);
   const hasAttempted = useRef(false);
   const dialingAudioRef = useRef(null);
+  const unavailableAudioRef = useRef(null);
 
   useEffect(() => {
     if (callState === CALL_STATES.DIALING || callState === CALL_STATES.RINGING) {
@@ -38,10 +39,24 @@ export default function CallPage({ params }) {
         dialingAudioRef.current.loop = true;
       }
       dialingAudioRef.current.play().catch(() => {});
+    } else if (callState === CALL_STATES.UNAVAILABLE) {
+      if (dialingAudioRef.current) {
+        dialingAudioRef.current.pause();
+        dialingAudioRef.current.currentTime = 0;
+      }
+      if (!unavailableAudioRef.current) {
+        unavailableAudioRef.current = new Audio('/unavailable.mp3');
+        // We play it at normal speed (playbackRate = 1.0 by default)
+      }
+      unavailableAudioRef.current.play().catch(() => {});
     } else {
       if (dialingAudioRef.current) {
         dialingAudioRef.current.pause();
         dialingAudioRef.current.currentTime = 0;
+      }
+      if (unavailableAudioRef.current) {
+        unavailableAudioRef.current.pause();
+        unavailableAudioRef.current.currentTime = 0;
       }
     }
     
@@ -50,13 +65,17 @@ export default function CallPage({ params }) {
         dialingAudioRef.current.pause();
         dialingAudioRef.current.currentTime = 0;
       }
+      if (unavailableAudioRef.current) {
+        unavailableAudioRef.current.pause();
+        unavailableAudioRef.current.currentTime = 0;
+      }
     };
   }, [callState]);
 
   useEffect(() => {
     // Prevent re-triggering call if we've already started it or if it's ending
     if (hasAttempted.current) return;
-    if (callState === CALL_STATES.ENDED) return; // Don't start if we are in ENDED state
+    if (callState === CALL_STATES.ENDED || callState === CALL_STATES.DECLINED || callState === CALL_STATES.UNAVAILABLE) return;
 
     const isInitiator = searchParams.get('initiator') === 'true';
     const calleeId = searchParams.get('callee');
@@ -71,11 +90,12 @@ export default function CallPage({ params }) {
 
   // Handle automatic redirection when call ends (from peer or local)
   useEffect(() => {
-    if (callState === CALL_STATES.ENDED || callState === CALL_STATES.DECLINED) {
-      console.log(`[CallPage] Call ${callState}, redirecting in 2s...`);
+    if (callState === CALL_STATES.ENDED || callState === CALL_STATES.DECLINED || callState === CALL_STATES.UNAVAILABLE) {
+      const waitTime = callState === CALL_STATES.UNAVAILABLE ? 6000 : 2000;
+      console.log(`[CallPage] Call ${callState}, redirecting in ${waitTime/1000}s...`);
       const timer = setTimeout(() => {
         router.replace('/app/calls');
-      }, 2000);
+      }, waitTime);
       return () => clearTimeout(timer);
     }
   }, [callState, router]);
@@ -113,7 +133,7 @@ export default function CallPage({ params }) {
       case CALL_STATES.CONNECTING:
         return 'Connecting...';
       case CALL_STATES.UNAVAILABLE:
-        return 'Unavailable';
+        return 'Recipient is unavailable';
       case CALL_STATES.DECLINED:
         return 'Declined';
       case CALL_STATES.ENDED:

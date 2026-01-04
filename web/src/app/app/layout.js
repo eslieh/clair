@@ -6,7 +6,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Info, Link2, Phone, User, Video } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { CallProvider } from "@/contexts/CallContext";
+import { CallProvider, useCall } from "@/contexts/CallContext";
 import CallOverlay from "@/components/CallOverlay";
 import Ringer from "@/components/Ringer";
 import NewCallModal from "@/components/NewCallModal";
@@ -116,6 +116,14 @@ function AppLayoutContent({ children }) {
   const isCallPage = pathname.startsWith("/app/call/");
   const showSidebar = !isCallPage;
 
+  const { startCall } = useCall();
+
+  const handleRedial = (item) => {
+    if (item.other?.id) {
+      startCall(item.other.id, item.other.display_name || 'User');
+    }
+  };
+
   return (
     <div className={styles.shell}>
       {showSidebar ? (
@@ -161,8 +169,13 @@ function AppLayoutContent({ children }) {
                         </div>
                       </div>
                       <div className={styles.recentIcons} aria-hidden="true">
-                        <Info size={16} />
-                        <Phone size={16} />
+                        <Info size={16} title="Call Details" />
+                        <Phone 
+                          size={16} 
+                          title="Call back" 
+                          className={styles.clickableIcon}
+                          onClick={() => handleRedial(item)} 
+                        />
                       </div>
                     </div>
                   ))}
