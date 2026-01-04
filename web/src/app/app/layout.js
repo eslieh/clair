@@ -5,9 +5,20 @@ import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Info, Link2, Phone, User, Video, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { CallProvider } from "@/contexts/CallContext";
 import styles from "./app.module.css";
+import CallOverlay from "@/components/CallOverlay";
+import Ringer from "@/components/Ringer";
 
 export default function AppLayout({ children }) {
+  return (
+    <CallProvider>
+      <AppLayoutContent>{children}</AppLayoutContent>
+    </CallProvider>
+  );
+}
+
+function AppLayoutContent({ children }) {
   const router = useRouter();
   const pathname = usePathname();
   const reduceMotion = useReducedMotion();
@@ -162,7 +173,8 @@ export default function AppLayout({ children }) {
       };
 
   const showGate = authState !== "authed";
-  const showSidebar = authState === "authed";
+  const isCallPage = pathname.startsWith("/app/call/");
+  const showSidebar = authState === "authed" && !isCallPage;
 
   return (
     <div className={styles.shell}>
@@ -452,6 +464,8 @@ export default function AppLayout({ children }) {
           </AnimatePresence>
         </div>
       </div>
+      <CallOverlay />
+      <Ringer />
     </div>
   );
 }

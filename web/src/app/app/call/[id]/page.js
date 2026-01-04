@@ -1,80 +1,54 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, use } from 'react';
 import { Phone, Mic, MicOff, Video, VideoOff, X, PhoneOff } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useCall, CALL_STATES } from '@/contexts/CallContext';
 import styles from './call.module.css';
-
-const CALL_STATES = {
-  DIALING: 'dialing',
-  RINGING: 'ringing',
-  CONNECTING: 'connecting',
-  CONNECTED: 'connected',
-  UNAVAILABLE: 'unavailable',
-  ENDED: 'ended'
-};
 
 export default function CallPage({ params }) {
   const router = useRouter();
-  const [callState, setCallState] = useState(CALL_STATES.DIALING);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isVideoOff, setIsVideoOff] = useState(false);
+  const { id } = use(params);
+
+  const { 
+    callState, 
+    startCall, 
+    endCall, 
+    isMuted, 
+    toggleMute, 
+    isVideoOff, 
+    toggleVideo,
+    localStreamRef,
+    remoteStreamRef,
+    callDuration,
+    callerName,
+    activeCallId
+  } = useCall();
+
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
-  const [callDuration, setCallDuration] = useState(0);
-  const [callerName, setCallerName] = useState('John Doe'); // Replace with actual contact name
-  
-  // Simulate call progress
+
   useEffect(() => {
-    if (callState === CALL_STATES.DIALING) {
-      const timer = setTimeout(() => setCallState(CALL_STATES.RINGING), 1000);
-      return () => clearTimeout(timer);
-    } else if (callState === CALL_STATES.RINGING) {
-      const timer = setTimeout(() => setCallState(CALL_STATES.CONNECTING), 2000);
-      return () => clearTimeout(timer);
-    } else if (callState === CALL_STATES.CONNECTING) {
-      const timer = setTimeout(() => setCallState(CALL_STATES.CONNECTED), 1500);
-      return () => clearTimeout(timer);
+    // If we are not in a call, or in a call with a different ID, start a new one
+    // CAUTION: In a real app, strict mode might trigger this twice.
+    if (callState === CALL_STATES.IDLE || activeCallId !== id) {
+       startCall(id, 'John Doe'); // Name hardcoded for now, could come from params/query
     }
-  }, [callState]);
+  }, [id, callState, activeCallId, startCall]);
 
-  // Simulate call timer
   useEffect(() => {
-    let interval;
-    if (callState === CALL_STATES.CONNECTED) {
-      interval = setInterval(() => {
-        setCallDuration(prev => prev + 1);
-      }, 1000);
+    // Sync streams to video elements ensuring we don't re-assign unnecessarily
+    if (localVideoRef.current && localStreamRef.current && localVideoRef.current.srcObject !== localStreamRef.current) {
+      localVideoRef.current.srcObject = localStreamRef.current;
     }
-    return () => clearInterval(interval);
-  }, [callState]);
-
-  // Get user media for local video
-  useEffect(() => {
-    if (localVideoRef.current) {
-      navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-        .then(stream => {
-          localVideoRef.current.srcObject = stream;
-          // For demo, we'll use the same stream for remote video
-          if (remoteVideoRef.current) {
-            remoteVideoRef.current.srcObject = stream.clone();
-          }
-        })
-        .catch(err => console.error('Error accessing media devices:', err));
+    if (remoteVideoRef.current && remoteStreamRef.current && remoteVideoRef.current.srcObject !== remoteStreamRef.current) {
+      remoteVideoRef.current.srcObject = remoteStreamRef.current;
     }
+  }, [callState, localStreamRef, remoteStreamRef]);
 
-    return () => {
-      if (localVideoRef.current?.srcObject) {
-        localVideoRef.current.srcObject.getTracks().forEach(track => track.stop());
-      }
-    };
-  }, []);
-
-  const endCall = () => {
-    setCallState(CALL_STATES.ENDED);
-    setTimeout(() => {
-      router.push('/app');
-    }, 1000);
+  const handleEndCall = () => {
+    endCall();
+    router.replace('/app');
   };
 
   const formatDuration = (seconds) => {
@@ -126,25 +100,23 @@ export default function CallPage({ params }) {
         )}
       </div>
 
-      {/* Local Video Feed (PIP) */}
-      {callState === CALL_STATES.CONNECTED && (
-        <div className={styles.localVideoContainer}>
-          <video 
-            ref={localVideoRef} 
-            autoPlay 
-            muted 
-            playsInline 
-            className={`${styles.localVideo} ${isVideoOff ? styles.videoOff : ''}`}
-          />
-          {isVideoOff && (
-            <div className={styles.videoOffOverlay}>
-              <div className={styles.videoOffIcon}>
-                <VideoOff size={24} />
-              </div>
+      {/* Local Video Feed (PIP within the page) */}
+      <div className={styles.localVideoContainer} style={{ display: callState === CALL_STATES.CONNECTED ? 'block' : 'none' }}>
+        <video 
+          ref={localVideoRef} 
+          autoPlay 
+          muted 
+          playsInline 
+          className={`${styles.localVideo} ${isVideoOff ? styles.videoOff : ''}`}
+        />
+        {isVideoOff && (
+          <div className={styles.videoOffOverlay}>
+            <div className={styles.videoOffIcon}>
+              <VideoOff size={24} />
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
 
       {/* Call Controls */}
       <div className={styles.callControls}>
@@ -156,25 +128,23 @@ export default function CallPage({ params }) {
         <div className={styles.controlButtons}>
           <button 
             className={`${styles.controlButton} ${isMuted ? styles.active : ''}`}
-            onClick={() => setIsMuted(!isMuted)}
+            onClick={toggleMute}
             aria-label={isMuted ? 'Unmute' : 'Mute'}
           >
             {isMuted ? <MicOff size={24} /> : <Mic size={24} />}
           </button>
           
-          {callState === CALL_STATES.CONNECTED && (
-            <button 
-              className={`${styles.controlButton} ${isVideoOff ? styles.active : ''} ${styles.videoButton}`}
-              onClick={() => setIsVideoOff(!isVideoOff)}
-              aria-label={isVideoOff ? 'Turn on video' : 'Turn off video'}
-            >
-              {isVideoOff ? <VideoOff size={24} /> : <Video size={24} />}
-            </button>
-          )}
+          <button 
+            className={`${styles.controlButton} ${isVideoOff ? styles.active : ''} ${styles.videoButton}`}
+            onClick={toggleVideo}
+            aria-label={isVideoOff ? 'Turn on video' : 'Turn off video'}
+          >
+            {isVideoOff ? <VideoOff size={24} /> : <Video size={24} />}
+          </button>
           
           <button 
             className={`${styles.controlButton} ${styles.endCallButton}`}
-            onClick={endCall}
+            onClick={handleEndCall}
             aria-label="End call"
           >
             <PhoneOff size={24} />

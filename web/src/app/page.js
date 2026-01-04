@@ -11,6 +11,7 @@ import {
   Users,
   Video,
   Wand2,
+  Image as ImageIcon
 } from "lucide-react";
 import styles from "./page.module.css";
 
@@ -111,104 +112,51 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.05, ease: [0.2, 0.8, 0.2, 1] }}
           >
-            <div className={styles.phone} aria-label="Clair call preview">
-              <div className={styles.phoneNotch} aria-hidden="true" />
-              <div className={styles.phoneScreen}>
-                <div className={styles.phoneTop}>
-                  <div className={styles.roomPill}>
-                    <span className={styles.dotLive} aria-hidden="true" />
-                    <span>Studio Hang</span>
-                  </div>
-                  <div className={styles.badge}>
-                    <Wand2 size={14} aria-hidden="true" />
-                    <span>Effects</span>
-                  </div>
-                </div>
-
-                <div className={styles.tiles}>
-                  <div className={`${styles.tile} ${styles.tileLarge}`}>
-                    <span className={styles.tileName}>You</span>
-                  </div>
-                  <div className={styles.tile}>
-                    <span className={styles.tileName}>Sofia</span>
-                  </div>
-                  <div className={styles.tile}>
-                    <span className={styles.tileName}>Mark</span>
-                  </div>
-                  <div className={styles.tile}>
-                    <span className={styles.tileName}>Anya</span>
-                  </div>
-                </div>
-
-                <div className={styles.controls} aria-hidden="true">
-                  <div className={styles.controlBtn} />
-                  <div className={styles.controlBtn} />
-                  <div className={styles.controlBtn} />
-                  <div className={`${styles.controlBtn} ${styles.controlEnd}`} />
-                </div>
-
-                <div className={styles.reactions} aria-hidden="true">
-                  <span className={styles.reaction}>👏</span>
-                  <span className={styles.reaction}>😂</span>
-                  <span className={styles.reaction}>😍</span>
-                  <span className={styles.reaction}>🔥</span>
-                </div>
-              </div>
-            </div>
+             <div className={styles.imagePlaceholder}>
+                <ImageIcon size={48} className={styles.imagePlaceholderIcon} />
+                <span>Product / App Screenshot</span>
+             </div>
           </motion.div>
         </section>
 
         <section className={styles.section} id="features">
           <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>Built for real‑time presence.</h2>
+            <h2 className={styles.sectionTitle}>Built for presence.</h2>
             <p className={styles.sectionSubtitle}>
-              Clair keeps the call lightweight and responsive, then adds delight
-              on top.
+              Clair keeps the call lightweight and responsive, then adds delight.
             </p>
           </div>
 
           <div className={styles.featureGrid}>
             <div className={styles.featureCard}>
-              <div className={styles.featureIcon}>
-                <Video size={18} aria-hidden="true" />
-              </div>
+              <div className={styles.featureImage}>Reference Image</div>
               <h3 className={styles.featureTitle}>Crystal‑clear video</h3>
               <p className={styles.featureText}>
-                Adaptive quality with smooth motion—so you stay present even on
-                variable networks.
+                Adaptive quality with smooth motion so you stay present even on variable networks.
               </p>
             </div>
 
             <div className={styles.featureCard}>
-              <div className={styles.featureIcon}>
-                <Sparkles size={18} aria-hidden="true" />
-              </div>
+              <div className={styles.featureImage}>Reference Image</div>
               <h3 className={styles.featureTitle}>Immersive effects</h3>
               <p className={styles.featureText}>
-                Subtle, tasteful effects and reactions designed for conversation,
-                not distraction.
+                Subtle, tasteful effects and reactions designed for conversation, not distraction.
               </p>
             </div>
 
             <div className={styles.featureCard}>
-              <div className={styles.featureIcon}>
-                <Users size={18} aria-hidden="true" />
-              </div>
-              <h3 className={styles.featureTitle}>Group calls that feel small</h3>
+               <div className={styles.featureImage}>Reference Image</div>
+              <h3 className={styles.featureTitle}>Smart Layouts</h3>
               <p className={styles.featureText}>
-                Smart layouts that prioritize who’s speaking—without turning your
-                call into a grid.
+                Prioritizes who’s speaking without turning your call into a generic grid.
               </p>
             </div>
-
-            <div className={styles.featureCard}>
-              <div className={styles.featureIcon}>
-                <Globe size={18} aria-hidden="true" />
-              </div>
+            
+             <div className={styles.featureCard}>
+               <div className={styles.featureImage}>Reference Image</div>
               <h3 className={styles.featureTitle}>Watch parties</h3>
               <p className={styles.featureText}>
-                Share a moment with synced playback and low‑latency voice—like
-                you’re on the same couch.
+                Share a moment with synced playback and low‑latency voice.
               </p>
             </div>
           </div>
@@ -224,48 +172,22 @@ export default function Home() {
               </p>
               <div className={styles.checks}>
                 <div className={styles.checkItem}>
-                  <ShieldCheck size={18} aria-hidden="true" />
+                  <ShieldCheck size={20} className={styles.kickerIcon} style={{color: '#0071e3'}} />
                   <span>End‑to‑end encrypted media</span>
                 </div>
                 <div className={styles.checkItem}>
-                  <Lock size={18} aria-hidden="true" />
+                  <Lock size={20} className={styles.kickerIcon} style={{color: '#0071e3'}} />
                   <span>Ephemeral rooms and links</span>
                 </div>
                 <div className={styles.checkItem}>
-                  <Globe size={18} aria-hidden="true" />
-                  <span>Optimized routing when needed</span>
+                  <Globe size={20} className={styles.kickerIcon} style={{color: '#0071e3'}} />
+                  <span>Direct P2P Routing</span>
                 </div>
               </div>
             </div>
 
-            <div className={styles.splitCard}>
-              <div className={styles.miniCard}>
-                <div className={styles.miniIcon}>
-                  <ShieldCheck size={18} aria-hidden="true" />
-                </div>
-                <div className={styles.miniText}>
-                  <div className={styles.miniTitle}>Secure session</div>
-                  <div className={styles.miniSub}>Encrypted • P2P • Private</div>
-                </div>
-              </div>
-              <div className={styles.miniCard}>
-                <div className={styles.miniIcon}>
-                  <Users size={18} aria-hidden="true" />
-                </div>
-                <div className={styles.miniText}>
-                  <div className={styles.miniTitle}>Instant join</div>
-                  <div className={styles.miniSub}>Link • Tap • You’re in</div>
-                </div>
-              </div>
-              <div className={styles.miniCard}>
-                <div className={styles.miniIcon}>
-                  <Wand2 size={18} aria-hidden="true" />
-                </div>
-                <div className={styles.miniText}>
-                  <div className={styles.miniTitle}>Delight built in</div>
-                  <div className={styles.miniSub}>Reactions • Effects • Vibes</div>
-                </div>
-              </div>
+            <div className={styles.splitVisual}>
+                 <span>Security Diagram / Visual</span>
             </div>
           </div>
         </section>

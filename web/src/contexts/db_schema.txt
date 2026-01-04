@@ -1,0 +1,52 @@
+create table public.call_participants (
+  id uuid not null default gen_random_uuid (),
+  call_id uuid null,
+  user_id uuid null,
+  joined_at timestamp without time zone null,
+  left_at timestamp without time zone null,
+  constraint call_participants_pkey primary key (id),
+  constraint call_participants_call_id_fkey foreign KEY (call_id) references calls (id) on update CASCADE on delete CASCADE,
+  constraint call_participants_user_id_fkey foreign KEY (user_id) references profile (id)
+) TABLESPACE pg_default;
+
+create table public.calls (
+  id uuid not null default gen_random_uuid (),
+  caller_id uuid null,
+  callee_id uuid null,
+  status text null,
+  started_at timestamp without time zone null,
+  ended_at timestamp without time zone null,
+  constraint calls_pkey primary key (id),
+  constraint calls_callee_id_fkey foreign KEY (callee_id) references profile (id) on update CASCADE on delete CASCADE,
+  constraint calls_caller_id_fkey foreign KEY (caller_id) references profile (id) on update CASCADE on delete CASCADE
+) TABLESPACE pg_default;
+
+create table public.contacts (
+  id uuid not null default gen_random_uuid (),
+  user_id uuid null,
+  contact_id uuid null,
+  created_at timestamp with time zone not null default now(),
+  constraint contacts_contact_id_fkey foreign KEY (contact_id) references profile (id) on update CASCADE on delete CASCADE,
+  constraint contacts_user_id_fkey foreign KEY (user_id) references profile (id)
+) TABLESPACE pg_default;
+
+create table public.devices (
+  id uuid not null default gen_random_uuid (),
+  user_id uuid not null,
+  device_type text null,
+  last_active timestamp without time zone null,
+  constraint devices_pkey primary key (id),
+  constraint devices_user_id_fkey foreign KEY (user_id) references profile (id) on update CASCADE on delete CASCADE
+) TABLESPACE pg_default;
+
+create table public.profile (
+  username text null,
+  display_name text null,
+  status text null,
+  last_seen timestamp without time zone null,
+  created_at timestamp with time zone not null default now(),
+  id uuid not null,
+  constraint profile_pkey primary key (id),
+  constraint profile_username_key unique (username),
+  constraint profile_id_fkey foreign KEY (id) references auth.users (id) on delete CASCADE
+) TABLESPACE pg_default;
