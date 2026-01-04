@@ -14,6 +14,8 @@ import {
   User,
 } from "lucide-react";
 import { useId, useMemo, useState } from "react";
+import { createClient } from "@/utils/supabase/client";
+import { login, signup } from "./actions";
 import styles from "./auth.module.css";
 
 export default function AuthPage() {
@@ -24,6 +26,7 @@ export default function AuthPage() {
   const [mode, setMode] = useState("signup");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
 
   const copy = useMemo(() => {
     if (mode === "signin") {
@@ -52,17 +55,34 @@ export default function AuthPage() {
   async function handleSubmit(e) {
     e.preventDefault();
     setIsSubmitting(true);
+    setError(null);
 
+    const formData = new FormData(e.currentTarget);
+    
     try {
-      await new Promise((r) => setTimeout(r, 350));
-      try {
-        localStorage.setItem("clair_authed", "1");
-      } catch {}
-      router.push("/app");
-    } finally {
+      const action = mode === 'signup' ? signup : login;
+      const result = await action(formData);
+      
+      if (result?.error) {
+        setError(result.error);
+        setIsSubmitting(false);
+      }
+    } catch (e) {
+      // In case of network error etc
+      setError("Something went wrong. Please try again.");
       setIsSubmitting(false);
     }
   }
+
+  const handleGoogleLogin = async () => {
+    const supabase = createClient();
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+  };
 
   const enter = reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 };
   const initial = reduceMotion ? { opacity: 1 } : { opacity: 0, y: 12 };
@@ -129,12 +149,7 @@ export default function AuthPage() {
             <button
               type="button"
               className={styles.googleBtn}
-              onClick={() => {
-                try {
-                  localStorage.setItem("clair_authed", "1");
-                } catch {}
-                router.push("/app");
-              }}
+              onClick={handleGoogleLogin}
               aria-label="Continue with Google"
             >
               <Chrome size={18} aria-hidden="true" />
@@ -144,6 +159,11 @@ export default function AuthPage() {
             <div className={styles.divider} role="separator" aria-label="or" />
 
             <form className={styles.form} onSubmit={handleSubmit}>
+              {error && (
+                <div style={{ color: 'var(--red-500, #ef4444)', fontSize: '0.875rem', marginBottom: '1rem', textAlign: 'center' }}>
+                  {error}
+                </div>
+              )}
               <AnimatePresence initial={false} mode="popLayout">
                 {mode === "signup" ? (
                   <motion.div
