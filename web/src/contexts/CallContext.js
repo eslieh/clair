@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
-import { logCallStart, updateCallStatus, logParticipantJoined, logCallEnd } from '@/app/app/calls/actions';
+import { logCallStart, updateCallStatus, logParticipantJoined, logCallEnd, savePushSubscription } from '@/app/app/calls/actions';
 
 const CallContext = createContext(null);
 
@@ -331,9 +331,13 @@ export function CallProvider({ children }) {
         setCurrentUser({ ...user, profile: profile || {} });
         connectSocket(user.id);
 
-        // Request notification permission
+        // Request notification permission & Register SW
         if (Notification.permission === 'default') {
           Notification.requestPermission();
+        }
+
+        if ('serviceWorker' in navigator && Notification.permission === 'granted') {
+          registerAndSubscribePush();
         }
       }
     };
@@ -343,6 +347,44 @@ export function CallProvider({ children }) {
       if (pcRef.current) pcRef.current.close();
     };
   }, [connectSocket]);
+
+  const registerAndSubscribePush = async () => {
+    try {
+      const registration = await navigator.serviceWorker.register('/sw.js');
+      console.log('[CallContext] Service Worker registered');
+
+      const publicVapidKey = 'BD-nQp7h93xiIx4QsndwrN0I1RXvCbuEkt7nS7VF1TqLyvjOSVA3GJxPJXEOXItheQ3PCUzC8Wu_qkXl48mDOuQ';
+      
+      let subscription = await registration.pushManager.getSubscription();
+      if (!subscription) {
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
+        });
+        console.log('[CallContext] Push Subscription created');
+      }
+
+      await savePushSubscription(JSON.parse(JSON.stringify(subscription)));
+      console.log('[CallContext] Push Subscription saved to DB');
+    } catch (err) {
+      console.error('[CallContext] Push registration failed:', err);
+    }
+  };
+
+  function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+      .replace(/\-/g, '+')
+      .replace(/_/g, '/');
+   
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+   
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  }
   
   useEffect(() => {
     let interval;

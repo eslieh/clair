@@ -10,6 +10,8 @@ import { CallProvider, useCall } from "@/contexts/CallContext";
 import CallOverlay from "@/components/CallOverlay";
 import Ringer from "@/components/Ringer";
 import NewCallModal from "@/components/NewCallModal";
+import CallDetailModal from "@/components/CallDetailModal";
+import CallConfirmModal from "@/components/CallConfirmModal";
 import { getCallHistory } from "@/app/app/calls/actions";
 import styles from "./app.module.css";
 
@@ -27,12 +29,14 @@ function AppLayoutContent({ children }) {
 
   const videoRef = useRef(null);
   const streamRef = useRef(null);
-
+  
   const [hasAuth, setHasAuth] = useState(false);
   const [camState, setCamState] = useState("idle");
   const [camError, setCamError] = useState(null);
   
   const [isNewCallModalOpen, setIsNewCallModalOpen] = useState(false);
+  const [selectedCall, setSelectedCall] = useState(null);
+  const [pendingCall, setPendingCall] = useState(null);
 
   const [recentGroups, setRecentGroups] = useState([]);
 
@@ -116,11 +120,29 @@ function AppLayoutContent({ children }) {
   const isCallPage = pathname.startsWith("/app/call/");
   const showSidebar = !isCallPage;
 
-  const { startCall } = useCall();
+  const { startCall, callState: currentCallState } = useCall();
 
-  const handleRedial = (item) => {
+  const handleRedial = (e, item) => {
+    e.stopPropagation(); // Don't open details modal
     if (item.other?.id) {
-      startCall(item.other.id, item.other.display_name || 'User');
+       setPendingCall({
+         id: item.other.id,
+         display_name: item.other.display_name,
+         username: item.other.username,
+         avatar_url: item.other.avatar_url,
+         type: 'video'
+       });
+    }
+  };
+
+  const handleShowDetails = (item) => {
+    setSelectedCall(item);
+  };
+
+  const confirmCall = () => {
+    if (pendingCall) {
+      startCall(pendingCall.id, pendingCall.display_name);
+      setPendingCall(null);
     }
   };
 
@@ -151,7 +173,11 @@ function AppLayoutContent({ children }) {
                 <div className={styles.recentHeading}>{group.section}</div>
                 <div className={styles.recentList}>
                   {group.items.map((item) => (
-                    <div key={item.id} className={styles.recentRow}>
+                    <div 
+                      key={item.id} 
+                      className={styles.recentRow}
+                      onClick={() => handleShowDetails(item)}
+                    >
                       <div className={styles.avatar} aria-hidden="true">
                         <img 
                           src={item.other?.avatar_url || `https://ui-avatars.com/api/?name=${item.other?.display_name || '?'}&background=random`} 
@@ -174,7 +200,7 @@ function AppLayoutContent({ children }) {
                           size={16} 
                           title="Call back" 
                           className={styles.clickableIcon}
-                          onClick={() => handleRedial(item)} 
+                          onClick={(e) => handleRedial(e, item)} 
                         />
                       </div>
                     </div>
@@ -262,9 +288,30 @@ function AppLayoutContent({ children }) {
       </div>
       <CallOverlay />
       <Ringer />
+      
+      {/* Modals */}
       {isNewCallModalOpen && (
         <NewCallModal onClose={() => setIsNewCallModalOpen(false)} />
       )}
+      
+      <AnimatePresence>
+        {selectedCall && (
+          <CallDetailModal 
+            key="detail-modal"
+            item={selectedCall} 
+            onClose={() => setSelectedCall(null)} 
+          />
+        )}
+        {pendingCall && (
+          <CallConfirmModal 
+            key="confirm-modal"
+            contact={pendingCall}
+            type={pendingCall.type}
+            onConfirm={confirmCall}
+            onClose={() => setPendingCall(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

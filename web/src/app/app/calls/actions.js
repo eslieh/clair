@@ -110,8 +110,8 @@ export async function getCallHistory() {
       started_at,
       caller_id,
       callee_id,
-      caller:profile!calls_caller_id_fkey(display_name, username, avatar_url),
-      callee:profile!calls_callee_id_fkey(display_name, username, avatar_url)
+      caller:profile!calls_caller_id_fkey(id, display_name, username, avatar_url),
+      callee:profile!calls_callee_id_fkey(id, display_name, username, avatar_url)
     `)
     .or(`caller_id.eq.${user.id},callee_id.eq.${user.id}`)
     .order('started_at', { ascending: false })
@@ -208,5 +208,25 @@ export async function addContact(contactId) {
   }
 
   revalidatePath('/app')
+  return { success: true }
+}
+
+export async function savePushSubscription(subscription) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const { error } = await supabase
+    .from('push_subscriptions')
+    .upsert({
+      user_id: user.id,
+      subscription: subscription
+    }, { onConflict: 'user_id' })
+
+  if (error) {
+    console.error('savePushSubscription error', error)
+    return { error: 'Could not save subscription' }
+  }
+
   return { success: true }
 }

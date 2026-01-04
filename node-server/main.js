@@ -1,5 +1,18 @@
 const WebSocket = require('ws');
 const { v4: uuidv4 } = require('uuid');
+const webpush = require('web-push');
+const { createClient } = require('@supabase/supabase-js');
+require('dotenv').config();
+
+// Setup Supabase
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+
+// Setup Web Push
+webpush.setVapidDetails(
+  `mailto:${process.env.VAPID_EMAIL}`,
+  process.env.VAPID_PUBLIC_KEY,
+  process.env.VAPID_PRIVATE_KEY
+);
 
 const wss = new WebSocket.Server({ port: 3001 });
 
@@ -83,25 +96,67 @@ function handleRegister(ws, payload) {
   }
 }
 
+async function sendPushNotification(userId, data) {
+  try {
+    const { data: subs, error } = await supabase
+      .from('push_subscriptions')
+      .select('subscription')
+      .eq('user_id', userId);
+
+    if (error) throw error;
+    if (!subs || subs.length === 0) {
+      console.log(`[Push] No subscriptions found for ${userId}`);
+      return;
+    }
+
+    console.log(`[Push] Sending to ${subs.length} subscriptions for ${userId}`);
+    
+    const payload = JSON.stringify({
+      title: data.title || 'Incoming Clair Call',
+      body: data.body || 'Someone is calling you',
+      icon: data.icon || '/favicon.ico',
+      url: `/app/call/${data.callId}?callee=${userId}`
+    });
+
+    const promises = subs.map(s => 
+      webpush.sendNotification(s.subscription, payload)
+        .catch(err => {
+          console.error('[Push] Single subscription failed:', err.statusCode);
+        })
+    );
+    
+    await Promise.all(promises);
+    console.log('[Push] Finished sending all pushes');
+  } catch (err) {
+    console.error('[Push] Error fetching/sending:', err);
+  }
+}
+
 function handleCallRequest(ws, payload) {
   const { calleeId, callerName, callerId, callId } = payload;
   
   console.log(`Call request from ${callerId} to ${calleeId} with ID ${callId}`);
 
-  const calleeWs = clients.get(calleeId);
-  if (!calleeWs) {
-    console.log(`Callee ${calleeId} not found`);
-    sendMessage(ws, 'call_failed', { reason: 'user_offline' });
-    return;
-  }
-
-  // Forward request to callee
-  sendMessage(calleeWs, 'incoming_call', {
+  // Send Push Notification
+  sendPushNotification(calleeId, {
     callId,
-    callerId,
-    callerName,
+    title: 'Incoming Call',
+    body: `${callerName} is calling you`,
     avatar_url: payload.avatar_url
   });
+
+  const calleeWs = clients.get(calleeId);
+  if (calleeWs) {
+    // Forward request to callee via websocket
+    sendMessage(calleeWs, 'incoming_call', {
+      callId,
+      callerId,
+      callerName,
+      avatar_url: payload.avatar_url
+    });
+  } else {
+    console.log(`Callee ${calleeId} not online, push sent.`);
+  }
 
   // Set 30s timeout
   const timeoutId = setTimeout(() => {
