@@ -142,8 +142,8 @@ a.secondary {
 
 .page {
   --bg: #f5f5f4;
-  --panel: rgba(255, 255, 255, 0.78);
-  --stroke: rgba(10, 10, 10, 0.09);
+  --panel: var(--glass-panel-light);
+  --stroke: var(--glass-stroke-light);
   --text: #141414;
   --muted: rgba(20, 20, 20, 0.62);
   --muted-2: rgba(20, 20, 20, 0.48);
@@ -161,7 +161,8 @@ a.secondary {
   position: sticky;
   top: 0;
   z-index: 30;
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   background: linear-gradient(
     to bottom,
     rgba(245, 245, 244, 0.85),
@@ -278,11 +279,26 @@ a.secondary {
   width: fit-content;
   padding: 10px 12px;
   border-radius: 999px;
-  background: var(--panel);
+  background:
+    radial-gradient(160px 90px at 20% 0%, rgba(255, 255, 255, 0.6), transparent 70%),
+    var(--panel);
   border: 1px solid var(--stroke);
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(calc(var(--glass-blur) - 6px)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur) - 6px)) saturate(var(--glass-saturate));
+  box-shadow: var(--glass-shadow-soft);
   font-size: 13px;
   color: var(--muted);
+  position: relative;
+  overflow: hidden;
+}
+
+.kicker::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.45), transparent 58%);
+  opacity: 0.6;
+  pointer-events: none;
 }
 
 .kickerIcon {
@@ -350,13 +366,28 @@ a.secondary {
   height: 44px;
   padding: 0 16px;
   border-radius: 14px;
-  background: var(--panel);
+  background:
+    radial-gradient(160px 90px at 20% 0%, rgba(255, 255, 255, 0.6), transparent 70%),
+    var(--panel);
   border: 1px solid var(--stroke);
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(calc(var(--glass-blur) - 6px)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur) - 6px)) saturate(var(--glass-saturate));
+  box-shadow: var(--glass-shadow-soft);
   font-weight: 650;
   font-size: 14px;
   color: var(--text);
   transition: 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.secondaryBtn::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.45), transparent 58%);
+  opacity: 0.55;
+  pointer-events: none;
 }
 
 .heroMeta {
@@ -485,7 +516,6 @@ a.secondary {
   position: relative;
   overflow: hidden;
 }
-
 .tileLarge {
   grid-row: span 2;
   border: 2px solid rgba(54, 212, 99, 0.5);
@@ -584,15 +614,30 @@ a.secondary {
 }
 
 .featureCard {
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(10, 10, 10, 0.08);
+  background:
+    radial-gradient(520px 220px at 15% 0%, rgba(255, 255, 255, 0.6), transparent 60%),
+    var(--glass-panel-light);
+  border: 1px solid var(--glass-stroke-light);
   border-radius: 22px;
   padding: 16px;
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--glass-shadow-soft);
+  backdrop-filter: blur(calc(var(--glass-blur) - 6px)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur) - 6px)) saturate(var(--glass-saturate));
   display: flex;
   flex-direction: column;
   gap: 10px;
   min-height: 156px;
+  position: relative;
+  overflow: hidden;
+}
+
+.featureCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.45), transparent 58%);
+  opacity: 0.45;
+  pointer-events: none;
 }
 
 .featureIcon {
@@ -646,23 +691,53 @@ a.secondary {
 
 .splitCard {
   border-radius: 28px;
-  background: rgba(255, 255, 255, 0.62);
-  border: 1px solid rgba(10, 10, 10, 0.08);
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.08);
+  background:
+    radial-gradient(520px 220px at 15% 0%, rgba(255, 255, 255, 0.6), transparent 60%),
+    var(--glass-panel-light);
+  border: 1px solid var(--glass-stroke-light);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   padding: 14px;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+.splitCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.45), transparent 58%);
+  opacity: 0.4;
+  pointer-events: none;
 }
 
 .miniCard {
   border-radius: 22px;
-  background: rgba(255, 255, 255, 0.78);
-  border: 1px solid rgba(10, 10, 10, 0.08);
+  background:
+    radial-gradient(520px 220px at 15% 0%, rgba(255, 255, 255, 0.6), transparent 60%),
+    var(--glass-panel-light-strong);
+  border: 1px solid var(--glass-stroke-light);
   padding: 12px;
   display: flex;
   gap: 12px;
   align-items: center;
+  backdrop-filter: blur(calc(var(--glass-blur) - 8px)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur) - 8px)) saturate(var(--glass-saturate));
+  position: relative;
+  overflow: hidden;
+}
+
+.miniCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.45), transparent 58%);
+  opacity: 0.38;
+  pointer-events: none;
 }
 
 .miniIcon {
@@ -698,12 +773,25 @@ a.secondary {
   background:
     radial-gradient(500px 240px at 20% 0%, rgba(255, 255, 255, 0.65), transparent),
     linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.56));
-  border: 1px solid rgba(10, 10, 10, 0.08);
-  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--glass-stroke-light);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   padding: 22px;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+.ctaCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.45), transparent 58%);
+  opacity: 0.35;
+  pointer-events: none;
 }
 
 .ctaTitle {

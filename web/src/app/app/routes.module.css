@@ -1,0 +1,208 @@
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.overlay {
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    border-radius: 22px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    height: 93vh;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+
+.overlayWide {
+  width: min(520px, 100%);
+  border-radius: 22px;
+  background:
+    radial-gradient(520px 180px at 15% 0%, rgba(255, 255, 255, 0.14), transparent 62%),
+    var(--glass-panel-dark);
+  border: 1px solid var(--glass-stroke-dark);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  box-shadow: var(--glass-shadow-soft);
+  padding: 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+.overlayWide::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent 52%);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.overlayTitle {
+    letter-spacing: -0.02em;
+    color: #ffffffeb;
+    font-size: 40px;
+    font-weight: 900;
+    line-height: 1.1;
+}
+
+.overlayText {
+  padding-top: 6px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 850;
+  letter-spacing: -0.03em;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.subtitle {
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.7);
+  max-width: 70ch;
+}
+
+.card {
+  border-radius: 22px;
+  background:
+    radial-gradient(520px 180px at 15% 0%, rgba(255, 255, 255, 0.14), transparent 62%),
+    var(--glass-panel-dark);
+  border: 1px solid var(--glass-stroke-dark);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  box-shadow: var(--glass-shadow-soft);
+  padding: 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent 52%);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.cardTitle {
+  font-size: 13px;
+  font-weight: 850;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.cardText {
+  padding-top: 6px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.dangerBtn {
+  margin-top: 6px;
+  width: fit-content;
+  height: 42px;
+  padding: 0 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 80, 80, 0.28);
+  background:
+    radial-gradient(140px 90px at 20% 0%, rgba(255, 255, 255, 0.12), transparent 70%),
+    rgba(255, 80, 80, 0.14);
+  backdrop-filter: blur(calc(var(--glass-blur) - 6px)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur) - 6px)) saturate(var(--glass-saturate));
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 850;
+  font-size: 13px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.dangerBtn::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent 56%);
+  opacity: 0.38;
+  pointer-events: none;
+}
+
+.dangerBtn:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.22);
+  outline-offset: 3px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .dangerBtn:hover {
+    background: rgba(255, 80, 80, 0.2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dangerBtn {
+    transition: none;
+  }
+}
+
+.newCallButton {
+    color: #fff;
+    cursor: pointer;
+    background: #3ccc52;
+    border: none;
+    border-radius: 28px;
+    justify-content: center;
+    align-items: center;
+    padding: 12px 24px;
+    font-size: 17px;
+    font-weight: 600;
+    transition: all .2s;
+    display: inline-flex;
+    box-shadow: 0 4px 20px #0a84ff4d;
+}
+
+.newCallButton:hover {
+    background: #0eec30;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(12, 185, 72, 0.4)
+}
+
+.newCallButton:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 12px rgba(10, 132, 255, 0.3);
+}
+
+@media screen and (max-width: 600px) {
+    .overlay {
+        padding: 16px;
+        justify-content: flex-start;
+        padding-top: 40px;
+    }
+    
+    .overlayTitle {
+        font-size: 32px;
+    }
+    
+    .overlayText {
+        font-size: 16px;
+        margin-bottom: 16px;
+    }
+    
+    .newCallButton {
+        margin-top: 24px;
+        padding: 12px 20px;
+        font-size: 16px;
+    }
+}

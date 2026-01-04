@@ -42,13 +42,13 @@ export default function Home() {
             </a>
           </nav>
           <div className={styles.headerCtas}>
-            <a className={styles.headerGhost} href="#waitlist">
+            <Link className={styles.headerGhost} href="/auth">
               Join waitlist
-            </a>
-            <a className={styles.headerPrimary} href="#waitlist">
+            </Link>
+            <Link className={styles.headerPrimary} href="/auth">
               Get early access
               <ArrowRight size={16} aria-hidden="true" />
-            </a>
+            </Link>
           </div>
         </div>
       </header>
@@ -79,11 +79,11 @@ export default function Home() {
               without the “meeting app” vibe.
             </p>
 
-            <div className={styles.heroCtas} id="waitlist">
-              <a className={styles.primaryBtn} href="#waitlist">
+            <div className={styles.heroCtas}>
+              <Link className={styles.primaryBtn} href="/auth">
                 Get early access
                 <ArrowRight size={18} aria-hidden="true" />
-              </a>
+              </Link>
               <a className={styles.secondaryBtn} href="#features">
                 Explore features
               </a>
@@ -278,10 +278,10 @@ export default function Home() {
               effortless.
             </p>
             <div className={styles.ctaActions}>
-              <a className={styles.primaryBtn} href="#waitlist">
+              <Link className={styles.primaryBtn} href="/auth">
                 Join the waitlist
                 <ArrowRight size={18} aria-hidden="true" />
-              </a>
+              </Link>
               <a className={styles.secondaryBtn} href="#features">
                 Learn more
               </a>

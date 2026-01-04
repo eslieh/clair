@@ -1,0 +1,244 @@
+/* Main container */
+.callContainer {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+/* Video containers */
+.videoContainer {
+  position: relative;
+  flex: 1;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.videoContainer.active {
+  background: #000;
+}
+
+.remoteVideo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Local video (PIP) */
+.localVideoContainer {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  width: 120px;
+  height: 180px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+  transition: all 0.3s ease;
+}
+
+.localVideoContainer:hover {
+  transform: scale(1.05);
+}
+
+.localVideo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.3s ease;
+}
+
+.localVideo.videoOff {
+  opacity: 0.3;
+}
+
+.videoOffOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.videoOffIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+/* Call status overlay */
+.statusOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  text-align: center;
+  padding: 20px;
+  z-index: 5;
+}
+
+.callerInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.callerAvatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 16px;
+}
+
+.callerName {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.callStatus {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-top: 8px;
+}
+
+/* Call controls */
+.callControls {
+  padding: 16px 20px 32px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  z-index: 20;
+}
+
+.callInfo {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.callInfoName {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 4px;
+  color: white;
+}
+
+.callInfoStatus {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+}
+
+.controlButtons {
+  display: flex;
+  gap: 32px;
+  justify-content: center;
+  width: 100%;
+  padding: 0 16px;
+}
+
+.controlButton {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.controlButton:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(1.05);
+}
+
+.controlButton:active {
+  transform: scale(0.95);
+}
+
+.controlButton.active {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.controlButton.endCallButton {
+  background: #ff3b30;
+  width: 64px;
+  height: 64px;
+  margin-top: -4px;
+}
+
+.controlButton.endCallButton:hover {
+  background: #ff5a52;
+  transform: scale(1.05);
+}
+
+.controlButton.endCallButton:active {
+  transform: scale(0.95);
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .localVideoContainer {
+    width: 100px;
+    height: 150px;
+    right: 12px;
+    top: 12px;
+  }
+  
+  .callerName {
+    font-size: 26px;
+  }
+  
+  .callStatus {
+    font-size: 16px;
+  }
+  
+  .controlButtons {
+    gap: 20px;
+  }
+  
+  .controlButton {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .controlButton.endCallButton {
+    width: 56px;
+    height: 56px;
+  }
+}
