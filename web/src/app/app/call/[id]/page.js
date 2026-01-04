@@ -28,6 +28,7 @@ export default function CallPage({ params }) {
 
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
+  const remoteVideoBgRef = useRef(null);
   const hasAttempted = useRef(false);
   const dialingAudioRef = useRef(null);
   const unavailableAudioRef = useRef(null);
@@ -108,6 +109,9 @@ export default function CallPage({ params }) {
       if (remoteVideoRef.current && remoteStreamRef.current && remoteVideoRef.current.srcObject !== remoteStreamRef.current) {
         remoteVideoRef.current.srcObject = remoteStreamRef.current;
       }
+      if (remoteVideoBgRef.current && remoteStreamRef.current && remoteVideoBgRef.current.srcObject !== remoteStreamRef.current) {
+        remoteVideoBgRef.current.srcObject = remoteStreamRef.current;
+      }
     };
 
     syncStreams();
@@ -147,6 +151,17 @@ export default function CallPage({ params }) {
     <div className={styles.callContainer}>
       {/* Remote Video Feed (Full Screen) */}
       <div className={`${styles.videoContainer} ${callState === CALL_STATES.CONNECTED ? styles.active : ''}`}>
+        {/* Background Blurred Layer */}
+        <video 
+          ref={remoteVideoBgRef} 
+          autoPlay 
+          muted
+          playsInline 
+          className={styles.remoteVideoBlurred}
+          style={{ display: callState === CALL_STATES.CONNECTED ? 'block' : 'none' }}
+        />
+        
+        {/* Primary Video Feed */}
         <video 
           ref={remoteVideoRef} 
           autoPlay 
