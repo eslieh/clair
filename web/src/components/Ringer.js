@@ -3,24 +3,40 @@
 import { useCall } from '@/contexts/CallContext';
 import { Phone, PhoneOff } from 'lucide-react';
 import styles from './Ringer.module.css';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 export default function Ringer() {
   const { incomingCall, acceptCall, declineCall } = useCall();
   const [visible, setVisible] = useState(false);
+  const audioRef = useRef(null);
 
   useEffect(() => {
     if (incomingCall) {
+      // Initialize audio
+      if (!audioRef.current) {
+        audioRef.current = new Audio('/apple_ring.mp3');
+        audioRef.current.loop = true;
+      }
+      
+      // Play sound
+      audioRef.current.play().catch(e => console.warn('Audio playback failed (need user interaction):', e));
+      
       // Small delay to allow mounting before sliding in
       const t = setTimeout(() => setVisible(true), 50);
       
-      // Play sound
-      // In real implementation we'd need a sound file, simulating for now with log
-      console.log('Playing Ringtone...'); 
-      
-      return () => clearTimeout(t);
+      return () => {
+        clearTimeout(t);
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
+        }
+      };
     } else {
       setVisible(false);
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
     }
   }, [incomingCall]);
 
@@ -38,7 +54,7 @@ export default function Ringer() {
       
       <div className={styles.content}>
         <div className={styles.name}>{incomingCall?.name || 'Incoming Call'}</div>
-        <div className={styles.label}>Clair Audio...</div>
+        <div className={styles.label}>Clair Video...</div>
       </div>
 
       <div className={styles.actions}>

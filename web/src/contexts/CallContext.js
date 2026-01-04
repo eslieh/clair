@@ -13,6 +13,7 @@ export const CALL_STATES = {
   CONNECTING: 'connecting',
   CONNECTED: 'connected',
   UNAVAILABLE: 'unavailable',
+  DECLINED: 'declined', // New state
   ENDED: 'ended',
   IDLE: 'idle'
 };
@@ -166,6 +167,18 @@ export function CallProvider({ children }) {
       case 'incoming_call':
         console.log('[CallContext] Incoming call from:', payload.callerName);
         remoteUserIdRef.current = payload.callerId;
+
+        // Browser Notification if tab is hidden
+        if (document.visibilityState === 'hidden') {
+          if (Notification.permission === 'granted') {
+            new Notification(`Incoming Clair Call`, {
+              body: `${payload.callerName} is calling you`,
+              icon: payload.avatar_url || '/favicon.ico',
+              tag: payload.callId
+            });
+          }
+        }
+
         setIncomingCall({ 
           id: payload.callId, 
           name: payload.callerName,
@@ -193,11 +206,11 @@ export function CallProvider({ children }) {
         } else {
           console.log('[CallContext] Call rejected');
           if (activeCallId) logCallEnd(activeCallId, 'missed');
-          setCallState(CALL_STATES.ENDED);
+          setCallState(CALL_STATES.DECLINED);
           setTimeout(() => {
-             setCallState(prev => prev === CALL_STATES.ENDED ? CALL_STATES.IDLE : prev);
+             setCallState(prev => prev === CALL_STATES.DECLINED ? CALL_STATES.IDLE : prev);
              setActiveCallId(prev => prev === payload.callId ? null : prev);
-          }, 2000);
+          }, 4000);
         }
         break;
       case 'session_description':
@@ -309,6 +322,11 @@ export function CallProvider({ children }) {
 
         setCurrentUser({ ...user, profile: profile || {} });
         connectSocket(user.id);
+
+        // Request notification permission
+        if (Notification.permission === 'default') {
+          Notification.requestPermission();
+        }
       }
     };
     initUser();

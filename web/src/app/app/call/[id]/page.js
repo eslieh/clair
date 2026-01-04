@@ -29,6 +29,29 @@ export default function CallPage({ params }) {
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
   const hasAttempted = useRef(false);
+  const dialingAudioRef = useRef(null);
+
+  useEffect(() => {
+    if (callState === CALL_STATES.DIALING || callState === CALL_STATES.RINGING) {
+      if (!dialingAudioRef.current) {
+        dialingAudioRef.current = new Audio('/dialing.mp3');
+        dialingAudioRef.current.loop = true;
+      }
+      dialingAudioRef.current.play().catch(() => {});
+    } else {
+      if (dialingAudioRef.current) {
+        dialingAudioRef.current.pause();
+        dialingAudioRef.current.currentTime = 0;
+      }
+    }
+    
+    return () => {
+      if (dialingAudioRef.current) {
+        dialingAudioRef.current.pause();
+        dialingAudioRef.current.currentTime = 0;
+      }
+    };
+  }, [callState]);
 
   useEffect(() => {
     // Prevent re-triggering call if we've already started it or if it's ending
@@ -48,8 +71,8 @@ export default function CallPage({ params }) {
 
   // Handle automatic redirection when call ends (from peer or local)
   useEffect(() => {
-    if (callState === CALL_STATES.ENDED) {
-      console.log('[CallPage] Call ended, redirecting in 2s...');
+    if (callState === CALL_STATES.ENDED || callState === CALL_STATES.DECLINED) {
+      console.log(`[CallPage] Call ${callState}, redirecting in 2s...`);
       const timer = setTimeout(() => {
         router.replace('/app/calls');
       }, 2000);
@@ -91,6 +114,8 @@ export default function CallPage({ params }) {
         return 'Connecting...';
       case CALL_STATES.UNAVAILABLE:
         return 'Unavailable';
+      case CALL_STATES.DECLINED:
+        return 'Declined';
       case CALL_STATES.ENDED:
         return 'Call ended';
       default:
