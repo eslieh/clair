@@ -18,6 +18,8 @@ export const CALL_STATES = {
   IDLE: 'idle'
 };
 
+const WS_SERVER_URL = process.env.WS_SERVER_URL || 'ws://localhost:3001';  
+
 export function CallProvider({ children }) {
   const router = useRouter();
   
@@ -293,7 +295,7 @@ export function CallProvider({ children }) {
       return; 
     }
 
-    const ws = new WebSocket('ws://localhost:3001');
+    const ws = new WebSocket(WS_SERVER_URL);
     socketRef.current = ws;
 
     ws.onopen = () => {
