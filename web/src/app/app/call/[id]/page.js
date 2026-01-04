@@ -2,12 +2,13 @@
 
 import { useEffect, useRef, use } from 'react';
 import { Phone, Mic, MicOff, Video, VideoOff, X, PhoneOff } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useCall, CALL_STATES } from '@/contexts/CallContext';
 import styles from './call.module.css';
 
 export default function CallPage({ params }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { id } = use(params);
 
   const { 
@@ -27,28 +28,51 @@ export default function CallPage({ params }) {
 
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
+  const hasAttempted = useRef(false);
 
   useEffect(() => {
-    // If we are not in a call, or in a call with a different ID, start a new one
-    // CAUTION: In a real app, strict mode might trigger this twice.
-    if (callState === CALL_STATES.IDLE || activeCallId !== id) {
-       startCall(id, 'John Doe'); // Name hardcoded for now, could come from params/query
+    // Prevent re-triggering call if we've already started it or if it's ending
+    if (hasAttempted.current) return;
+    if (callState === CALL_STATES.ENDED) return; // Don't start if we are in ENDED state
+
+    const isInitiator = searchParams.get('initiator') === 'true';
+    const calleeId = searchParams.get('callee');
+    const calleeName = searchParams.get('name') || 'User';
+
+    if (isInitiator && calleeId && (callState === CALL_STATES.IDLE || activeCallId !== id)) {
+       console.log('[CallPage] Initiating call with ID:', id);
+       hasAttempted.current = true;
+       startCall(calleeId, calleeName, id);
     }
-  }, [id, callState, activeCallId, startCall]);
+  }, [id, callState, activeCallId, startCall, searchParams]);
+
+  // Handle automatic redirection when call ends (from peer or local)
+  useEffect(() => {
+    if (callState === CALL_STATES.ENDED) {
+      console.log('[CallPage] Call ended, redirecting in 2s...');
+      const timer = setTimeout(() => {
+        router.replace('/app/calls');
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [callState, router]);
 
   useEffect(() => {
-    // Sync streams to video elements ensuring we don't re-assign unnecessarily
-    if (localVideoRef.current && localStreamRef.current && localVideoRef.current.srcObject !== localStreamRef.current) {
-      localVideoRef.current.srcObject = localStreamRef.current;
-    }
-    if (remoteVideoRef.current && remoteStreamRef.current && remoteVideoRef.current.srcObject !== remoteStreamRef.current) {
-      remoteVideoRef.current.srcObject = remoteStreamRef.current;
-    }
-  }, [callState, localStreamRef, remoteStreamRef]);
+    const syncStreams = () => {
+      if (localVideoRef.current && localStreamRef.current && localVideoRef.current.srcObject !== localStreamRef.current) {
+        localVideoRef.current.srcObject = localStreamRef.current;
+      }
+      if (remoteVideoRef.current && remoteStreamRef.current && remoteVideoRef.current.srcObject !== remoteStreamRef.current) {
+        remoteVideoRef.current.srcObject = remoteStreamRef.current;
+      }
+    };
+
+    syncStreams();
+  }, [callState, localStreamRef.current, remoteStreamRef.current]);
 
   const handleEndCall = () => {
     endCall();
-    router.replace('/app');
+    // Redirect is now handled by the useEffect above for consistency
   };
 
   const formatDuration = (seconds) => {
@@ -91,7 +115,11 @@ export default function CallPage({ params }) {
           <div className={styles.statusOverlay}>
             <div className={styles.callerInfo}>
               <div className={styles.callerAvatar}>
-                {callerName.charAt(0).toUpperCase()}
+                {searchParams.get('avatar') ? (
+                  <img src={searchParams.get('avatar')} alt="" className={styles.avatarImg} />
+                ) : (
+                  (callerName || 'U').charAt(0).toUpperCase()
+                )}
               </div>
               <h1 className={styles.callerName}>{callerName}</h1>
               <p className={styles.callStatus}>{renderCallStatus()}</p>

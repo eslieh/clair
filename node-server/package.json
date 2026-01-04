@@ -1,0 +1,14 @@
+{
+  "name": "clair-signaling-server",
+  "version": "1.0.0",
+  "description": "WebSocket signaling server for Clair",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js",
+    "dev": "node --watch main.js"
+  },
+  "dependencies": {
+    "uuid": "^9.0.1",
+    "ws": "^8.15.0"
+  }
+}

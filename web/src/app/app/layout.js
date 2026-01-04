@@ -7,9 +7,11 @@ import { Info, Link2, Phone, User, Video } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { CallProvider } from "@/contexts/CallContext";
-import styles from "./app.module.css";
 import CallOverlay from "@/components/CallOverlay";
 import Ringer from "@/components/Ringer";
+import NewCallModal from "@/components/NewCallModal";
+import { getCallHistory } from "@/app/app/calls/actions";
+import styles from "./app.module.css";
 
 export default function AppLayout({ children }) {
   return (
@@ -29,29 +31,20 @@ function AppLayoutContent({ children }) {
   const [hasAuth, setHasAuth] = useState(false);
   const [camState, setCamState] = useState("idle");
   const [camError, setCamError] = useState(null);
+  
+  const [isNewCallModalOpen, setIsNewCallModalOpen] = useState(false);
 
-  const recents = useMemo(
-    () => [
-      {
-        section: "Yesterday",
-        items: [
-          { name: "Mommy ❤️❤️", meta: "mobile · Yesterday" },
-          { name: "Mark", meta: "mobile · Yesterday" },
-        ],
-      },
-      {
-        section: "Last Week",
-        items: [
-          { name: "Brian", meta: "mobile · 20/12/2025" },
-          { name: "Ian, Work", meta: "phone · 19/12/2025" },
-          { name: "Sonie", meta: "mobile · 18/12/2025" },
-          { name: "Kirk 💯💪", meta: "mobile · 18/12/2025" },
-          { name: "Dennis, Work", meta: "phone · 18/12/2025" },
-        ],
-      },
-    ],
-    []
-  );
+  const [recentGroups, setRecentGroups] = useState([]);
+
+  useEffect(() => {
+    // Only fetch if authenticated to avoid errors
+    if (hasAuth) {
+      getCallHistory().then(calls => {
+        const groups = groupCallsByDate(calls);
+        setRecentGroups(groups);
+      });
+    }
+  }, [hasAuth]);
 
   const startCamera = useCallback(async () => {
     setCamError(null);
@@ -133,7 +126,11 @@ function AppLayoutContent({ children }) {
                 <Link2 size={16} aria-hidden="true" />
                 Create Link
               </button>
-              <button type="button" className={styles.actionBtnPrimary}>
+              <button 
+                type="button" 
+                className={styles.actionBtnPrimary}
+                onClick={() => setIsNewCallModalOpen(true)}
+              >
                 <Video size={16} aria-hidden="true" />
                 New Clair Call
               </button>
@@ -141,18 +138,27 @@ function AppLayoutContent({ children }) {
           </div>
 
           <div className={styles.sidebarScroll}>
-            {recents.map((group) => (
+            {recentGroups.map((group) => (
               <div key={group.section} className={styles.recentGroup}>
                 <div className={styles.recentHeading}>{group.section}</div>
                 <div className={styles.recentList}>
                   {group.items.map((item) => (
-                    <div key={item.name} className={styles.recentRow}>
+                    <div key={item.id} className={styles.recentRow}>
                       <div className={styles.avatar} aria-hidden="true">
-                        {item.name.trim().slice(0, 1).toUpperCase()}
+                        <img 
+                          src={item.other?.avatar_url || `https://ui-avatars.com/api/?name=${item.other?.display_name || '?'}&background=random`} 
+                          alt="" 
+                          style={{width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%'}}
+                        />
                       </div>
                       <div className={styles.recentText}>
-                        <div className={styles.recentName}>{item.name}</div>
-                        <div className={styles.recentMeta}>{item.meta}</div>
+                        <div className={styles.recentName}>{item.other?.display_name || 'Unknown'}</div>
+                        <div className={styles.recentMeta}>
+                          <span className={item.rawStatus === 'missed' ? styles.statusMissed : ''}>
+                            {item.status}
+                          </span>
+                          {' • '}{item.meta}
+                        </div>
                       </div>
                       <div className={styles.recentIcons} aria-hidden="true">
                         <Info size={16} />
@@ -243,6 +249,48 @@ function AppLayoutContent({ children }) {
       </div>
       <CallOverlay />
       <Ringer />
+      {isNewCallModalOpen && (
+        <NewCallModal onClose={() => setIsNewCallModalOpen(false)} />
+      )}
     </div>
   );
+}
+
+function groupCallsByDate(calls) {
+  const groups = {
+    today: [],
+    yesterday: [],
+    lastWeek: [],
+    older: [],
+  };
+
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  calls.forEach(call => {
+    const date = new Date(call.date);
+    const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const isToday = date.toDateString() === today.toDateString();
+    const isYesterday = date.toDateString() === yesterday.toDateString();
+    const isLastWeek = (today - date) < 7 * 24 * 60 * 60 * 1000;
+
+    const item = {
+      ...call,
+      meta: isToday ? timeStr : (isYesterday ? 'Yesterday' : date.toLocaleDateString())
+    };
+
+    if (isToday) groups.today.push(item);
+    else if (isYesterday) groups.yesterday.push(item);
+    else if (isLastWeek) groups.lastWeek.push(item);
+    else groups.older.push(item);
+  });
+
+  const result = [];
+  if (groups.today.length > 0) result.push({ section: 'Today', items: groups.today });
+  if (groups.yesterday.length > 0) result.push({ section: 'Yesterday', items: groups.yesterday });
+  if (groups.lastWeek.length > 0) result.push({ section: 'Last Week', items: groups.lastWeek });
+  if (groups.older.length > 0) result.push({ section: 'Older', items: groups.older });
+
+  return result;
 }

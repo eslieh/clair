@@ -161,6 +161,10 @@
   text-overflow: ellipsis;
 }
 
+.statusMissed {
+  color: #ff4d4d;
+}
+
 .recentIcons {
   display: inline-flex;
   gap: 10px;

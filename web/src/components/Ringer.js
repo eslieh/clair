@@ -29,7 +29,11 @@ export default function Ringer() {
   return (
     <div className={`${styles.ringerOverlay} ${incomingCall && visible ? styles.visible : ''}`}>
       <div className={styles.avatar}>
-        {incomingCall?.name?.[0]?.toUpperCase() || 'C'}
+        {incomingCall?.avatar_url ? (
+          <img src={incomingCall.avatar_url} alt="" className={styles.avatarImg} />
+        ) : (
+          incomingCall?.name?.[0]?.toUpperCase() || 'C'
+        )}
       </div>
       
       <div className={styles.content}>
