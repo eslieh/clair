@@ -6,6 +6,7 @@ require('dotenv').config();
 
 // Setup Supabase
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+const port = process.env.PORT || 3001;
 
 // Setup Web Push
 webpush.setVapidDetails(
@@ -14,7 +15,7 @@ webpush.setVapidDetails(
   process.env.VAPID_PRIVATE_KEY
 );
 
-const wss = new WebSocket.Server({ port: 3001 });
+const wss = new WebSocket.Server({ port });
 
 // Map userId -> WebSocket
 const clients = new Map();
@@ -23,7 +24,7 @@ const callTimeouts = new Map();
 // Map userId -> Array of queued messages
 const messageQueues = new Map();
 
-console.log('Signaling server running on port 3001');
+console.log(`Signaling server running on port ${port}`);
 
 wss.on('connection', (ws) => {
   ws.id = uuidv4();
