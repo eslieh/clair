@@ -8,7 +8,6 @@
   z-index: 1000;
   overflow: hidden;
 }
-
 /* Video containers */
 .videoContainer {
   position: relative;
@@ -40,7 +39,6 @@
   opacity: 0.8;
   z-index: 1;
 }
-
 /* Local video (PIP) */
 .localVideoContainer {
   position: absolute;
@@ -55,7 +53,6 @@
   z-index: 10;
   transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-
 .localVideoContainer:hover {
   transform: scale(1.05);
 }
