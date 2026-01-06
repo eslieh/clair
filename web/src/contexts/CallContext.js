@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import { logCallStart, updateCallStatus, logParticipantJoined, logCallEnd, savePushSubscription } from '@/app/app/calls/actions';
@@ -22,8 +22,6 @@ const WS_SERVER_URL = process.env.WS_SERVER_URL || 'wss:clair.onrender.com';
 
 export function CallProvider({ children }) {
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
   
   // 1. State declarations
   const [callState, setCallState] = useState(CALL_STATES.IDLE);
@@ -322,32 +320,6 @@ export function CallProvider({ children }) {
 
   // 6. Effects
   useEffect(() => {
-    const answering = searchParams.get('answering') === 'true';
-    const calleeId = searchParams.get('callee');
-    const callerId = searchParams.get('callerId');
-    const callerNameParam = searchParams.get('callerName');
-    const callerAvatar = searchParams.get('callerAvatar');
-
-    // Only auto-initialize if we are landing on the call page and no active call is present
-    if (answering && calleeId && callerId && callState === CALL_STATES.IDLE) {
-      const match = pathname.match(/\/app\/call\/([^/?#]+)/);
-      const callId = match ? match[1] : null;
-
-      if (callId) {
-        console.log('[CallContext] Auto-initializing incoming call from URL:', { callId, callerNameParam });
-        setIncomingCall({
-          id: callId,
-          name: callerNameParam || 'User',
-          callerId: callerId,
-          avatar_url: callerAvatar
-        });
-        setCallState(CALL_STATES.RINGING);
-        remoteUserIdRef.current = callerId;
-      }
-    }
-  }, [searchParams, pathname, callState, connectSocket]);
-
-  useEffect(() => {
     const supabase = createClient();
     const initUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -548,11 +520,49 @@ export function CallProvider({ children }) {
     <CallContext.Provider value={{
       callState, activeCallId, callerName, callDuration, isMuted, isVideoOff, incomingCall,
       localStreamRef, remoteStreamRef, startCall, endCall, acceptCall, declineCall,
-      toggleMute, toggleVideo, sendMessage
+      toggleMute, toggleVideo, sendMessage,
+      setIncomingCall, setCallState, remoteUserIdRef // Exposed for initialization
     }}>
+      <Suspense fallback={null}>
+        <CallContextURLHandler />
+      </Suspense>
       {children}
     </CallContext.Provider>
   );
+}
+
+function CallContextURLHandler() {
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const { callState, setIncomingCall, setCallState, remoteUserIdRef } = useCall();
+
+  useEffect(() => {
+    const answering = searchParams.get('answering') === 'true';
+    const calleeId = searchParams.get('callee');
+    const callerId = searchParams.get('callerId');
+    const callerNameParam = searchParams.get('callerName');
+    const callerAvatar = searchParams.get('callerAvatar');
+
+    // Only auto-initialize if we are landing on the call page and no active call is present
+    if (answering && calleeId && callerId && callState === CALL_STATES.IDLE) {
+      const match = pathname.match(/\/app\/call\/([^/?#]+)/);
+      const callId = match ? match[1] : null;
+
+      if (callId) {
+        console.log('[CallContext] Auto-initializing incoming call from URL:', { callId, callerNameParam });
+        setIncomingCall({
+          id: callId,
+          name: callerNameParam || 'User',
+          callerId: callerId,
+          avatar_url: callerAvatar
+        });
+        setCallState(CALL_STATES.RINGING);
+        remoteUserIdRef.current = callerId;
+      }
+    }
+  }, [searchParams, pathname, callState]);
+
+  return null;
 }
 
 export const useCall = () => {
