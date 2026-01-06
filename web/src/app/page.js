@@ -134,8 +134,8 @@ export default function Home() {
             <Link className={styles.headerGhost} href="/auth">
               Try it out
             </Link>
-            <Link className={styles.headerPrimary} href="/auth">
-              Get early access
+            <Link className={styles.headerPrimary} href="/app">
+              Go to app
               <ArrowRight size={16} aria-hidden="true" />
             </Link>
           </div>
@@ -168,7 +168,7 @@ export default function Home() {
 
             <div className={styles.heroCtas}>
               <Link className={styles.primaryBtn} href="/auth">
-                Get early access
+                Try it out
                 <ArrowRight size={18} aria-hidden="true" />
               </Link>
               <a className={styles.secondaryBtn} href="#features">
