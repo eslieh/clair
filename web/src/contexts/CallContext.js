@@ -28,10 +28,11 @@ export function CallProvider({ children }) {
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
-  const [callerName, setCallerName] = useState('John Doe');
+  const [callerName, setCallerName] = useState('Loading...');
   const [activeCallId, setActiveCallId] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [incomingCall, setIncomingCall] = useState(null);
+  const [socketConnected, setSocketConnected] = useState(false);
 
   // 2. Ref declarations
   const socketRef = useRef(null);
@@ -300,6 +301,7 @@ export function CallProvider({ children }) {
 
     ws.onopen = () => {
       console.log('[CallContext] Socket connected');
+      setSocketConnected(true);
       ws.send(JSON.stringify({ type: 'register', payload: { userId } }));
     };
 
@@ -314,6 +316,7 @@ export function CallProvider({ children }) {
     
     ws.onclose = () => {
       console.log('[CallContext] Socket disconnected');
+      setSocketConnected(false);
       socketRef.current = null;
     };
   }, []); // No dependencies! Stable.
@@ -479,9 +482,9 @@ export function CallProvider({ children }) {
     }
   }, [startLocalStream, currentUser, router, callState, activeCallId, sendMessage]);
 
-  const acceptCall = useCallback(async () => {
-    if (!incomingCall) return;
-    const { id, name, callerId } = incomingCall;
+  const performAcceptCall = useCallback(async (callData) => {
+    const { id, name, callerId } = callData;
+    console.log('[CallContext] Performing accept for call:', id, 'from:', name);
     
     remoteUserIdRef.current = callerId;
     setCallState(CALL_STATES.CONNECTING);
@@ -502,7 +505,12 @@ export function CallProvider({ children }) {
     setActiveCallId(id);
     setCallerName(name);
     router.push(`/app/call/${id}`);
-  }, [incomingCall, router, startLocalStream, sendMessage, currentUser]);
+  }, [router, startLocalStream, sendMessage, currentUser]);
+
+  const acceptCall = useCallback(async () => {
+    if (!incomingCall) return;
+    await performAcceptCall(incomingCall);
+  }, [incomingCall, performAcceptCall]);
 
   const declineCall = useCallback(() => {
     if (incomingCall) {
@@ -521,7 +529,7 @@ export function CallProvider({ children }) {
       callState, activeCallId, callerName, callDuration, isMuted, isVideoOff, incomingCall,
       localStreamRef, remoteStreamRef, startCall, endCall, acceptCall, declineCall,
       toggleMute, toggleVideo, sendMessage,
-      setIncomingCall, setCallState, remoteUserIdRef // Exposed for initialization
+      setIncomingCall, setCallState, remoteUserIdRef, performAcceptCall, currentUser, socketConnected // Exposed for initialization
     }}>
       <Suspense fallback={null}>
         <CallContextURLHandler />
@@ -534,7 +542,8 @@ export function CallProvider({ children }) {
 function CallContextURLHandler() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const { callState, setIncomingCall, setCallState, remoteUserIdRef } = useCall();
+  const { callState, setIncomingCall, setCallState, remoteUserIdRef, performAcceptCall, currentUser, socketConnected } = useCall();
+  const hasAutoAnswered = useRef(false);
 
   useEffect(() => {
     const answering = searchParams.get('answering') === 'true';
@@ -543,24 +552,37 @@ function CallContextURLHandler() {
     const callerNameParam = searchParams.get('callerName');
     const callerAvatar = searchParams.get('callerAvatar');
 
-    // Only auto-initialize if we are landing on the call page and no active call is present
-    if (answering && calleeId && callerId && callState === CALL_STATES.IDLE) {
+    // Only auto-initialize if we are landing on the call page and no active call is present (or we are in RINGING from this same auto-answer)
+    if (answering && calleeId && callerId && (callState === CALL_STATES.IDLE || callState === CALL_STATES.RINGING) && !hasAutoAnswered.current) {
       const match = pathname.match(/\/app\/call\/([^/?#]+)/);
       const callId = match ? match[1] : null;
 
       if (callId) {
-        console.log('[CallContext] Auto-initializing incoming call from URL:', { callId, callerNameParam });
-        setIncomingCall({
-          id: callId,
-          name: callerNameParam || 'User',
-          callerId: callerId,
-          avatar_url: callerAvatar
-        });
-        setCallState(CALL_STATES.RINGING);
-        remoteUserIdRef.current = callerId;
+        // If user and socket are ready, answer immediately
+        if (currentUser && socketConnected) {
+          console.log('[CallContext] Auto-answering call:', callId);
+          hasAutoAnswered.current = true;
+          performAcceptCall({
+            id: callId,
+            name: callerNameParam || 'User',
+            callerId: callerId,
+            avatar_url: callerAvatar
+          });
+        } else if (callState === CALL_STATES.IDLE) {
+          // Fall back to ringing state until ready
+          console.log('[CallContext] Auto-answer detected, showing ringer until auth/socket ready...');
+          setIncomingCall({
+            id: callId,
+            name: callerNameParam || 'User',
+            callerId: callerId,
+            avatar_url: callerAvatar
+          });
+          setCallState(CALL_STATES.RINGING);
+          remoteUserIdRef.current = callerId;
+        }
       }
     }
-  }, [searchParams, pathname, callState]);
+  }, [searchParams, pathname, callState, currentUser, socketConnected, performAcceptCall, setIncomingCall, setCallState, remoteUserIdRef]);
 
   return null;
 }
