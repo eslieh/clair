@@ -13,7 +13,7 @@ export const CALL_STATES = {
   CONNECTING: 'connecting',
   CONNECTED: 'connected',
   UNAVAILABLE: 'unavailable',
-  DECLINED: 'declined', // New state
+  DECLINED: 'declined',
   ENDED: 'ended',
   IDLE: 'idle'
 };
