@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   ArrowRight,
@@ -10,21 +12,107 @@ import {
   Sparkles,
   Users,
   Video,
-  Wand2,
-  Image as ImageIcon
 } from "lucide-react";
 import styles from "./page.module.css";
 
 export default function Home() {
   const reduceMotion = useReducedMotion();
 
+  useEffect(() => {
+    // Warm up the Render backend
+    const warmUp = async () => {
+      try {
+        // Both HTTP and WSS usually wake up the service on Render
+        // We'll use the HTTPS endpoint for a simple pulse
+        const backendUrl = "https://clair.onrender.com";
+        console.log("[Clair] Warming up backend...");
+        await fetch(backendUrl, { mode: 'no-cors' });
+      } catch (e) {
+        // Ignore errors, it's just a pulse
+      }
+    };
+    warmUp();
+  }, []);
+
+  const container = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
   const fadeUp = {
-    hidden: { opacity: 0, y: 14 },
-    visible: { opacity: 1, y: 0 },
+    hidden: { opacity: 0, y: 20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: [0.22, 1, 0.36, 1]
+      }
+    },
+  };
+
+  const landingImages = {
+    hero: {
+      src: "/images/hero.png",
+      alt: "Clair video calling interface",
+    },
+    features: [
+      {
+        src: "/images/feature-video.png",
+        alt: "Crystal clear video",
+        title: "Crystal‑clear video",
+        text: "Adaptive quality with smooth motion so you stay present even on variable networks.",
+      },
+      {
+        src: "/images/feature-effects.png",
+        alt: "Immersive effects",
+        title: "Immersive effects",
+        text: "Subtle, tasteful effects and reactions designed for conversation, not distraction.",
+      },
+      {
+        src: "/images/feature-layouts.png",
+        alt: "Smart layouts",
+        title: "Smart Layouts",
+        text: "Prioritizes who’s speaking without turning your call into a generic grid.",
+      },
+      {
+        src: "/images/feature-watch.png",
+        alt: "Watch parties",
+        title: "Watch parties",
+        text: "Share a moment with synced playback and low‑latency voice.",
+      },
+    ],
+    security: {
+      src: "/images/security.png",
+      alt: "Peer-to-peer encrypted connection",
+    },
   };
 
   return (
     <div className={styles.page}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "Clair",
+            "operatingSystem": "Web",
+            "applicationCategory": "CommunicationApplication",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            },
+            "description": "Experience crystal-clear, low-latency video calls with Clair. Built for privacy and presence with peer-to-peer technology."
+          })
+        }}
+      />
       <header className={styles.header}>
         <div className={styles.headerInner}>
           <Link className={styles.brand} href="/">
@@ -44,7 +132,7 @@ export default function Home() {
           </nav>
           <div className={styles.headerCtas}>
             <Link className={styles.headerGhost} href="/auth">
-              Join waitlist
+              Try it out
             </Link>
             <Link className={styles.headerPrimary} href="/auth">
               Get early access
@@ -61,7 +149,6 @@ export default function Home() {
             initial={reduceMotion ? "visible" : "hidden"}
             animate="visible"
             variants={fadeUp}
-            transition={{ duration: 0.55, ease: [0.2, 0.8, 0.2, 1] }}
           >
             <div className={styles.kicker}>
               <span className={styles.kickerIcon}>
@@ -76,8 +163,7 @@ export default function Home() {
             </h1>
             <p className={styles.subhead}>
               Clair is a peer‑to‑peer video chat built for presence: crystal‑clear
-              streams, instant reactions, watch parties, and immersive effects—
-              without the “meeting app” vibe.
+              streams, instant reactions, watch parties, and immersive effects.
             </p>
 
             <div className={styles.heroCtas}>
@@ -108,63 +194,76 @@ export default function Home() {
 
           <motion.div
             className={styles.heroVisual}
-            initial={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.05, ease: [0.2, 0.8, 0.2, 1] }}
+            initial={reduceMotion ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
           >
-             <div className={styles.imagePlaceholder}>
-                <ImageIcon size={48} className={styles.imagePlaceholderIcon} />
-                <span>Product / App Screenshot</span>
-             </div>
+             <div className={styles.imageFrame}>
+              <Image
+                src={landingImages.hero.src}
+                alt={landingImages.hero.alt}
+                width={1200}
+                height={800}
+                className={styles.heroImg}
+                priority
+              />
+            </div>
           </motion.div>
         </section>
 
         <section className={styles.section} id="features">
-          <div className={styles.sectionHeader}>
+          <motion.div 
+            className={styles.sectionHeader}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={fadeUp}
+          >
             <h2 className={styles.sectionTitle}>Built for presence.</h2>
             <p className={styles.sectionSubtitle}>
               Clair keeps the call lightweight and responsive, then adds delight.
             </p>
-          </div>
+          </motion.div>
 
-          <div className={styles.featureGrid}>
-            <div className={styles.featureCard}>
-              <div className={styles.featureImage}>Reference Image</div>
-              <h3 className={styles.featureTitle}>Crystal‑clear video</h3>
-              <p className={styles.featureText}>
-                Adaptive quality with smooth motion so you stay present even on variable networks.
-              </p>
-            </div>
-
-            <div className={styles.featureCard}>
-              <div className={styles.featureImage}>Reference Image</div>
-              <h3 className={styles.featureTitle}>Immersive effects</h3>
-              <p className={styles.featureText}>
-                Subtle, tasteful effects and reactions designed for conversation, not distraction.
-              </p>
-            </div>
-
-            <div className={styles.featureCard}>
-               <div className={styles.featureImage}>Reference Image</div>
-              <h3 className={styles.featureTitle}>Smart Layouts</h3>
-              <p className={styles.featureText}>
-                Prioritizes who’s speaking without turning your call into a generic grid.
-              </p>
-            </div>
-            
-             <div className={styles.featureCard}>
-               <div className={styles.featureImage}>Reference Image</div>
-              <h3 className={styles.featureTitle}>Watch parties</h3>
-              <p className={styles.featureText}>
-                Share a moment with synced playback and low‑latency voice.
-              </p>
-            </div>
-          </div>
+          <motion.div 
+            className={styles.featureGrid}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={container}
+          >
+            {landingImages.features.map((feature, i) => (
+              <motion.div 
+                key={i} 
+                className={styles.featureCard}
+                variants={fadeUp}
+                whileHover={{ y: -5, transition: { duration: 0.2 } }}
+              >
+                <div className={styles.featureImageContainer}>
+                  <Image
+                    src={feature.src}
+                    alt={feature.alt}
+                    width={400}
+                    height={300}
+                    className={styles.featureImg}
+                  />
+                </div>
+                <h3 className={styles.featureTitle}>{feature.title}</h3>
+                <p className={styles.featureText}>{feature.text}</p>
+              </motion.div>
+            ))}
+          </motion.div>
         </section>
 
         <section className={styles.section} id="security">
           <div className={styles.split}>
-            <div className={styles.splitCopy}>
+            <motion.div 
+              className={styles.splitCopy}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-100px" }}
+              variants={fadeUp}
+            >
               <h2 className={styles.sectionTitle}>Private by design.</h2>
               <p className={styles.sectionSubtitle}>
                 Peer‑to‑peer connections keep your call direct. Clair is built to
@@ -184,16 +283,34 @@ export default function Home() {
                   <span>Direct P2P Routing</span>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
-            <div className={styles.splitVisual}>
-                 <span>Security Diagram / Visual</span>
-            </div>
+            <motion.div 
+              className={styles.splitVisual}
+              initial={reduceMotion ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            >
+               <Image
+                  src={landingImages.security.src}
+                  alt={landingImages.security.alt}
+                  width={600}
+                  height={400}
+                  className={styles.securityImg}
+               />
+            </motion.div>
           </div>
         </section>
 
         <section className={styles.section} id="why">
-          <div className={styles.ctaCard}>
+          <motion.div 
+            className={styles.ctaCard}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={fadeUp}
+          >
             <h2 className={styles.ctaTitle}>Meet Clair, the new default.</h2>
             <p className={styles.ctaText}>
               Built for friends, teams, and creators who want video that feels
@@ -201,14 +318,14 @@ export default function Home() {
             </p>
             <div className={styles.ctaActions}>
               <Link className={styles.primaryBtn} href="/auth">
-                Join the waitlist
+                Continue to app
                 <ArrowRight size={18} aria-hidden="true" />
               </Link>
               <a className={styles.secondaryBtn} href="#features">
                 Learn more
               </a>
             </div>
-          </div>
+          </motion.div>
         </section>
       </main>
 

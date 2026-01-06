@@ -18,7 +18,7 @@ export const CALL_STATES = {
   IDLE: 'idle'
 };
 
-const WS_SERVER_URL = process.env.WS_SERVER_URL || 'wss:clair.onrender.com';  
+const WS_SERVER_URL = process.env.NEXT_PUBLIC_WS_SERVER_URL || 'wss://clair.onrender.com';  
 
 export function CallProvider({ children }) {
   const router = useRouter();
