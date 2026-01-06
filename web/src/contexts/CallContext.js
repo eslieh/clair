@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import { logCallStart, updateCallStatus, logParticipantJoined, logCallEnd, savePushSubscription } from '@/app/app/calls/actions';
 
@@ -22,6 +22,8 @@ const WS_SERVER_URL = process.env.WS_SERVER_URL || 'wss:clair.onrender.com';
 
 export function CallProvider({ children }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   
   // 1. State declarations
   const [callState, setCallState] = useState(CALL_STATES.IDLE);
@@ -319,6 +321,32 @@ export function CallProvider({ children }) {
   }, []); // No dependencies! Stable.
 
   // 6. Effects
+  useEffect(() => {
+    const answering = searchParams.get('answering') === 'true';
+    const calleeId = searchParams.get('callee');
+    const callerId = searchParams.get('callerId');
+    const callerNameParam = searchParams.get('callerName');
+    const callerAvatar = searchParams.get('callerAvatar');
+
+    // Only auto-initialize if we are landing on the call page and no active call is present
+    if (answering && calleeId && callerId && callState === CALL_STATES.IDLE) {
+      const match = pathname.match(/\/app\/call\/([^/?#]+)/);
+      const callId = match ? match[1] : null;
+
+      if (callId) {
+        console.log('[CallContext] Auto-initializing incoming call from URL:', { callId, callerNameParam });
+        setIncomingCall({
+          id: callId,
+          name: callerNameParam || 'User',
+          callerId: callerId,
+          avatar_url: callerAvatar
+        });
+        setCallState(CALL_STATES.RINGING);
+        remoteUserIdRef.current = callerId;
+      }
+    }
+  }, [searchParams, pathname, callState, connectSocket]);
+
   useEffect(() => {
     const supabase = createClient();
     const initUser = async () => {

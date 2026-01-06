@@ -152,10 +152,10 @@ function AppLayoutContent({ children }) {
         <aside className={styles.sidebar} aria-label="Sidebar">
           <div className={styles.sidebarTop}>
             <div className={styles.sidebarActions}>
-              <button type="button" className={styles.actionBtn}>
+              {/* <button type="button" className={styles.actionBtn}>
                 <Link2 size={16} aria-hidden="true" />
                 Create Link
-              </button>
+              </button> */}
               <button 
                 type="button" 
                 className={styles.actionBtnPrimary}

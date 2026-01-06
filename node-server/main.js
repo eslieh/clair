@@ -115,8 +115,8 @@ async function sendPushNotification(userId, data) {
     const payload = JSON.stringify({
       title: data.title || 'Incoming Clair Call',
       body: data.body || 'Someone is calling you',
-      icon: data.icon || '/favicon.ico',
-      url: `/app/call/${data.callId}?callee=${userId}`
+      icon: data.avatar_url || data.icon || '/favicon.ico',
+      url: `/app/call/${data.callId}?callee=${userId}&callerId=${data.callerId}&callerName=${encodeURIComponent(data.callerName || '')}&callerAvatar=${encodeURIComponent(data.avatar_url || '')}&answering=true`
     });
 
     const promises = subs.map(s => 
@@ -143,6 +143,8 @@ function handleCallRequest(ws, payload) {
     callId,
     title: 'Incoming Call',
     body: `${callerName} is calling you`,
+    callerName,
+    callerId,
     avatar_url: payload.avatar_url
   });
 
