@@ -116,7 +116,8 @@ async function sendPushNotification(userId, data) {
       title: data.title || 'Incoming Clair Call',
       body: data.body || 'Someone is calling you',
       icon: data.avatar_url || data.icon || '/favicon.ico',
-      url: `/app/call/${data.callId}?callee=${userId}&callerId=${data.callerId}&callerName=${encodeURIComponent(data.callerName || '')}&callerAvatar=${encodeURIComponent(data.avatar_url || '')}&answering=true`
+      url: data.notificationType === 'missed_call' ? '/app/calls' : `/app/call/${data.callId}?callee=${userId}&callerId=${data.callerId}&callerName=${encodeURIComponent(data.callerName || '')}&callerAvatar=${encodeURIComponent(data.avatar_url || '')}&answering=true`,
+      notificationType: data.notificationType || 'incoming_call'
     });
 
     const promises = subs.map(s => 
@@ -145,7 +146,8 @@ function handleCallRequest(ws, payload) {
     body: `${callerName} is calling you`,
     callerName,
     callerId,
-    avatar_url: payload.avatar_url
+    avatar_url: payload.avatar_url,
+    notificationType: 'incoming_call'
   });
 
   const calleeWs = clients.get(calleeId);
@@ -171,6 +173,17 @@ function handleCallRequest(ws, payload) {
       sendMessage(ws, 'call_timeout', { callId });
       const cWs = clients.get(calleeId);
       if (cWs) sendMessage(cWs, 'call_timeout', { callId });
+
+      // Send Missed Call Push
+      sendPushNotification(calleeId, {
+        callId,
+        title: 'Missed Call',
+        body: `You missed a call from ${callerName}`,
+        callerName,
+        callerId,
+        avatar_url: payload.avatar_url,
+        notificationType: 'missed_call'
+      });
     }
   }, 30000);
 

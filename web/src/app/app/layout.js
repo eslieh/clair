@@ -12,6 +12,7 @@ import Ringer from "@/components/Ringer";
 import NewCallModal from "@/components/NewCallModal";
 import CallDetailModal from "@/components/CallDetailModal";
 import CallConfirmModal from "@/components/CallConfirmModal";
+import AccountModal from "@/components/AccountModal";
 import { getCallHistory } from "@/app/app/calls/actions";
 // import { groupCallsByDate } from "@/app/app/calls/utils";
 import styles from "./app.module.css";
@@ -36,6 +37,7 @@ function AppLayoutContent({ children }) {
   const [camError, setCamError] = useState(null);
   
   const [isNewCallModalOpen, setIsNewCallModalOpen] = useState(false);
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
   const [selectedCall, setSelectedCall] = useState(null);
   const [pendingCall, setPendingCall] = useState(null);
 
@@ -97,6 +99,16 @@ function AppLayoutContent({ children }) {
     });
   }, []);
 
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    if (hasAuth) {
+      import("@/app/app/account/actions").then(({ getProfile }) => {
+        getProfile().then(data => setProfile(data));
+      });
+    }
+  }, [hasAuth]);
+
   useEffect(() => {
     if (!hasAuth) return;
     startCamera();
@@ -119,7 +131,10 @@ function AppLayoutContent({ children }) {
       };
 
   const isCallPage = pathname.startsWith("/app/call/");
-  const showSidebar = !isCallPage;
+  const isSetupPage = pathname === "/app/setup";
+  const isAccountPage = pathname.startsWith("/app/account");
+  const showSidebar = !isCallPage && !isSetupPage;
+  const showStage = !isSetupPage;
 
   const { startCall, callState: currentCallState } = useCall();
 
@@ -153,10 +168,6 @@ function AppLayoutContent({ children }) {
         <aside className={styles.sidebar} aria-label="Sidebar">
           <div className={styles.sidebarTop}>
             <div className={styles.sidebarActions}>
-              {/* <button type="button" className={styles.actionBtn}>
-                <Link2 size={16} aria-hidden="true" />
-                Create Link
-              </button> */}
               <button 
                 type="button" 
                 className={styles.actionBtnPrimary}
@@ -210,83 +221,97 @@ function AppLayoutContent({ children }) {
               </div>
             ))}
 
-            <Link
-              href="/app/account"
-              className={styles.accountEntry}
-            >
-              <span className={styles.accountEntryIcon} aria-hidden="true">
-                <User size={16} />
-              </span>
-              <span className={styles.accountEntryText}>
-                <span className={styles.accountEntryTitle}>Account</span>
-                <span className={styles.accountEntrySubtitle}>
-                  Edit your contact card
-                </span>
-              </span>
-            </Link>
+            {/* Removed legacy account entry */}
           </div>
         </aside>
       ) : null}
 
-      <div className={styles.stage}>
-        <video
-          ref={videoRef}
-          className={styles.video}
-          playsInline
-          muted
-          autoPlay
-        />
-        <div className={styles.vignette} aria-hidden="true" />
-
-        <div
-          className={`${styles.stageContent} ${showSidebar ? styles.stageContentWithSidebar : ""}`}
+      {!isAccountPage && (
+        <a 
+          href="/app/account" 
+          className={styles.floatingAccount}
+          aria-label="Account Settings"
+          onClick={(e) => {
+            e.preventDefault();
+            setIsAccountModalOpen(true);
+          }}
         >
-          <AnimatePresence mode="wait" initial={false}>
-             {camState === "requesting" ? (
-              <motion.div
-                key="cam-request"
-                className={styles.centerCard}
-                {...motionProps}
-                transition={{ duration: 0.35, ease: [0.2, 0.8, 0.2, 1] }}
-              >
-                <div className={styles.centerTitle}>Starting camera…</div>
-                <div className={styles.centerText}>
-                  Allow camera access to preview your video.
-                </div>
-              </motion.div>
-            ) : camState === "denied" || camState === "error" ? (
-              <motion.div
-                key="cam-error"
-                className={styles.centerCard}
-                {...motionProps}
-                transition={{ duration: 0.35, ease: [0.2, 0.8, 0.2, 1] }}
-              >
-                <div className={styles.centerTitle}>Camera unavailable</div>
-                <div className={styles.centerText}>
-                  {camError || "Please check permissions and try again."}
-                </div>
-                <button
-                  type="button"
-                  className={styles.centerBtn}
-                  onClick={startCamera}
-                >
-                  Try again
-                </button>
-              </motion.div>
-            ) : (
-              <motion.div
-                key={pathname}
-                className={styles.route}
-                {...motionProps}
-                transition={{ duration: 0.35, ease: [0.2, 0.8, 0.2, 1] }}
-              >
-                {children}
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {profile?.avatar_url ? (
+            <img 
+              src={profile.avatar_url} 
+              alt="" 
+              className={styles.floatingAvatar} 
+            />
+          ) : (
+            <User size={20} />
+          )}
+        </a>
+      )}
 
+      {showStage ? (
+        <div className={styles.stage}>
+          <video
+            ref={videoRef}
+            className={styles.video}
+            playsInline
+            muted
+            autoPlay
+          />
+          <div className={styles.vignette} aria-hidden="true" />
+
+          <div
+            className={`${styles.stageContent} ${showSidebar ? styles.stageContentWithSidebar : ""}`}
+          >
+            <AnimatePresence mode="wait" initial={false}>
+               {camState === "requesting" ? (
+                <motion.div
+                  key="cam-request"
+                  className={styles.centerCard}
+                  {...motionProps}
+                  transition={{ duration: 0.35, ease: [0.2, 0.8, 0.2, 1] }}
+                >
+                  <div className={styles.centerTitle}>Starting camera…</div>
+                  <div className={styles.centerText}>
+                    Allow camera access to preview your video.
+                  </div>
+                </motion.div>
+              ) : camState === "denied" || camState === "error" ? (
+                <motion.div
+                  key="cam-error"
+                  className={styles.centerCard}
+                  {...motionProps}
+                  transition={{ duration: 0.35, ease: [0.2, 0.8, 0.2, 1] }}
+                >
+                  <div className={styles.centerTitle}>Camera unavailable</div>
+                  <div className={styles.centerText}>
+                    {camError || "Please check permissions and try again."}
+                  </div>
+                  <button
+                    type="button"
+                    className={styles.centerBtn}
+                    onClick={startCamera}
+                  >
+                    Try again
+                  </button>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key={pathname}
+                  className={styles.route}
+                  {...motionProps}
+                  transition={{ duration: 0.35, ease: [0.2, 0.8, 0.2, 1] }}
+                >
+                  {children}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div style={{ flex: 1, position: 'relative' }}>
+          {children}
+        </div>
+      )}
       <CallOverlay />
       <Ringer />
       
@@ -296,6 +321,13 @@ function AppLayoutContent({ children }) {
       )}
       
       <AnimatePresence>
+        {isAccountModalOpen && (
+          <AccountModal 
+            profile={profile}
+            onUpdate={(updated) => setProfile(updated)}
+            onClose={() => setIsAccountModalOpen(false)}
+          />
+        )}
         {selectedCall && (
           <CallDetailModal 
             key="detail-modal"

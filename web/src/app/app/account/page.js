@@ -1,25 +1,31 @@
 'use client';
 
 import { useEffect, useState, useTransition, useRef } from 'react';
-import { Camera, Loader2, Upload, User } from 'lucide-react';
+import { Camera, Loader2, User as UserIcon, ChevronLeft } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { getProfile, updateProfile } from './actions';
 import { signOut } from '@/app/auth/actions';
-import styles from '../routes.module.css';
+import styles from './account.module.css';
 
 const SaveStatus = ({ status }) => {
-  if (status === 'saving') return <span className={styles.saveStatus}>Saving…</span>;
-  if (status === 'saved') return <span className={styles.saveStatus}>Saved!</span>;
-  if (status === 'error') return <span className={styles.saveStatusError}>Error saving</span>;
-  return null;
+  if (status === 'saving') return <div className={styles.saveStatus}>Saving…</div>;
+  if (status === 'saved') return <div className={styles.saveStatus}>Saved!</div>;
+  if (status === 'error') return <div className={styles.saveStatusError}>Error saving</div>;
+  return <div className={styles.saveStatus} />;
 };
 
 export default function AccountPage() {
+  const router = useRouter();
   const [profile, setProfile] = useState(null);
   const [isPending, startTransition] = useTransition();
   const [saveState, setSaveState] = useState('idle');
   
-  // Image Upload State
+  // Local form state
+  const [displayName, setDisplayName] = useState('');
+  const [username, setUsername] = useState('');
+  const [status, setStatus] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
+  
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -27,6 +33,9 @@ export default function AccountPage() {
     getProfile().then(data => {
       if (data) {
         setProfile(data);
+        setDisplayName(data.display_name || '');
+        setUsername(data.username || '');
+        setStatus(data.status || '');
         setAvatarUrl(data.avatar_url || '');
       }
     });
@@ -34,9 +43,17 @@ export default function AccountPage() {
 
   if (!profile) {
     return (
-      <div className={styles.overlayWide}>
-        <div className={styles.overlayTitle}>Account</div>
-        <div className={styles.overlayText}>Loading profile…</div>
+      <div className={styles.accountContainer}>
+        <div className={styles.navHeader}>
+          <button className={styles.backBtn} onClick={() => router.back()}>
+            <ChevronLeft size={24} />
+            <span>Back</span>
+          </button>
+        </div>
+        <div className={styles.accountHeader}>
+          <h1 className={styles.title}>Account</h1>
+        </div>
+        <p>Loading profile…</p>
       </div>
     );
   }
@@ -51,7 +68,6 @@ export default function AccountPage() {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET);
-      // Optional: Add folder, tags, etc.
       
       const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
       const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
@@ -66,13 +82,12 @@ export default function AccountPage() {
         // Automatically save the new avatar URL
         const profileData = new FormData();
         profileData.append('avatarUrl', data.secure_url);
-        profileData.append('displayName', profile.display_name); // Preserve other fields
-        profileData.append('username', profile.username);
-        profileData.append('status', profile.status);
+        profileData.append('displayName', displayName);
+        profileData.append('username', username);
+        profileData.append('status', status);
         
         await updateProfile(profileData);
       } else {
-        console.error('Upload failed', data);
         alert('Failed to upload image');
       }
     } catch (err) {
@@ -83,12 +98,16 @@ export default function AccountPage() {
     }
   };
 
-  const handleSubmit = (formData) => {
+  const handleSave = () => {
     setSaveState('saving');
-    // Ensure accurate avatar URL is sent
-    formData.set('avatarUrl', avatarUrl);
     
     startTransition(async () => {
+      const formData = new FormData();
+      formData.append('displayName', displayName);
+      formData.append('username', username);
+      formData.append('status', status);
+      formData.append('avatarUrl', avatarUrl);
+
       const result = await updateProfile(formData);
       if (result.error) {
         setSaveState('error');
@@ -100,44 +119,43 @@ export default function AccountPage() {
   };
 
   return (
-    <div className={styles.overlayWide}>
-      <header className={styles.headerRow}>
-        <div className={styles.headerContent}>
-          <div className={styles.overlayTitle}>Account</div>
-          <div className={styles.overlaySubtitle} style={{ marginTop: '0.25rem' }}>
-            Manage your profile and presence
-          </div>
-        </div>
-        <SaveStatus status={saveState} />
+    <div className={styles.accountContainer}>
+      <div className={styles.navHeader}>
+        <button className={styles.backBtn} onClick={() => router.back()}>
+          <ChevronLeft size={24} />
+          <span>Back</span>
+        </button>
+      </div>
+      <header className={styles.accountHeader}>
+        <h1 className={styles.title}>Account</h1>
+        <button 
+          className={styles.saveBtn}
+          onClick={handleSave}
+          disabled={isPending || isUploading}
+        >
+          {isPending ? 'Saving...' : 'Save'}
+        </button>
       </header>
 
       <div className={styles.avatarSection}>
         <div className={styles.avatarWrapper}>
           {isUploading ? (
             <div className={styles.avatarLoading}>
-              <Loader2 className={styles.spinner} size={24} />
+              <Loader2 className={styles.spinner} size={32} />
             </div>
+          ) : avatarUrl ? (
+            <img src={avatarUrl} alt="Profile" className={styles.avatarImage} />
           ) : (
-            <img 
-              src={avatarUrl || `https://ui-avatars.com/api/?name=${profile.display_name}&background=random`} 
-              alt="Profile" 
-              className={styles.avatarImage} 
-            />
+            <UserIcon className={styles.placeholderIcon} />
           )}
-          <button 
-            type="button"
-            className={styles.avatarEditBtn}
-            onClick={() => fileInputRef.current?.click()}
-            title="Change photo"
-          >
-            <Camera size={16} />
-          </button>
         </div>
-        <div className={styles.avatarInfo}>
-          <h3 className={styles.avatarName}>{profile.display_name || 'Your Name'}</h3>
-          <p className={styles.avatarEmail}>{profile.email}</p>
-        </div>
-        
+        <button 
+          type="button"
+          className={styles.editPhotoBtn}
+          onClick={() => fileInputRef.current?.click()}
+        >
+          Edit Photo
+        </button>
         <input 
           ref={fileInputRef}
           type="file" 
@@ -147,60 +165,51 @@ export default function AccountPage() {
         />
       </div>
 
-      <form action={handleSubmit} className={styles.formStack}>
-        <div className={styles.formGrid}>
-          <label className={styles.field}>
-            <span className={styles.label}>Display Name</span>
+      <div className={styles.formSection}>
+        <div className={styles.groupedList}>
+          <div className={styles.field}>
+            <span className={styles.label}>Name</span>
             <input
               className={styles.input}
-              name="displayName"
-              defaultValue={profile.display_name}
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
               placeholder="Your Name"
             />
-          </label>
+          </div>
 
-          <label className={styles.field}>
+          <div className={styles.field}>
             <span className={styles.label}>Username</span>
             <input
               className={styles.input}
-              name="username"
-              defaultValue={profile.username}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               placeholder="@username"
             />
-          </label>
+          </div>
+
+          <div className={styles.field}>
+            <span className={styles.label}>Status</span>
+            <input
+              className={styles.input}
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              placeholder="What's on your mind?"
+            />
+          </div>
         </div>
+        
+        <SaveStatus status={saveState} />
 
-        <label className={styles.field}>
-          <span className={styles.label}>Status</span>
-          <input
-            className={styles.input}
-            name="status"
-            defaultValue={profile.status}
-            placeholder="What's on your mind?"
-          />
-        </label>
-
-        <div className={styles.actionsRow} style={{ marginTop: '1.5rem' }}>
-          <button 
-            type="submit" 
-            className={styles.primaryBtn}
-            disabled={isPending || isUploading}
+        <div className={styles.signOutSection}>
+          <button
+            type="button"
+            className={styles.signOutBtn}
+            onClick={() => signOut()}
           >
-            {isPending ? 'Saving…' : 'Save Changes'}
+            Sign Out
           </button>
         </div>
-      </form>
-
-      <hr className={styles.divider} />
-
-      <form action={signOut}>
-        <button
-          type="submit"
-          className={styles.dangerBtn}
-        >
-          Sign out
-        </button>
-      </form>
+      </div>
     </div>
   );
 }

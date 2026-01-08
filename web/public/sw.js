@@ -14,16 +14,21 @@ self.addEventListener('push', function(event) {
   }
 
   const title = data.title || 'Clair Call';
+  const isMissedCall = data.notificationType === 'missed_call';
+  
   const options = {
     body: data.body || 'Someone is calling you',
     icon: data.icon || '/favicon.ico',
     badge: '/favicon.ico',
-    data: data.url || '/',
-    actions: [
+    data: data.url || '/app/calls',
+    actions: isMissedCall ? [
+      { action: 'open', title: 'View' },
+      { action: 'close', title: 'Dismiss' }
+    ] : [
       { action: 'open', title: 'Answer' },
       { action: 'close', title: 'Dismiss' }
     ],
-    vibrate: [200, 100, 200, 100, 200, 100, 200],
+    vibrate: isMissedCall ? [100] : [200, 100, 200, 100, 200, 100, 200],
     tag: 'call-notification',
     renotify: true
   };

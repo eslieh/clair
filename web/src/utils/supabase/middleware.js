@@ -37,15 +37,33 @@ export async function updateSession(request) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  const { pathname } = request.nextUrl
+
   if (
     !user &&
-    !request.nextUrl.pathname.startsWith('/auth') && 
-    request.nextUrl.pathname !== '/'
+    !pathname.startsWith('/auth') && 
+    pathname !== '/'
   ) {
     // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone()
     url.pathname = '/auth'
     return NextResponse.redirect(url)
+  }
+
+  // Profile completion check for authenticated users in /app
+  if (user && pathname.startsWith('/app') && pathname !== '/app/setup') {
+    const { data: profile } = await supabase
+      .from('profile')
+      .select('username, display_name')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile || !profile.username || !profile.display_name) {
+      console.log(`[Middleware] Incomplete profile for ${user.id}, redirecting to /app/setup`)
+      const url = request.nextUrl.clone()
+      url.pathname = '/app/setup'
+      return NextResponse.redirect(url)
+    }
   }
 
   return supabaseResponse
