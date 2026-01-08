@@ -101,14 +101,14 @@
 
 .actionItem span {
   font-size: 11px;
-  color: #007aff;
+  color: rgba(255, 255, 255, 0.6); /* Changed from blue */
 }
 
 .actionIcon {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: #007aff;
+  background: rgba(255, 255, 255, 0.1); /* Changed from blue */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -158,14 +158,15 @@
   gap: 16px;
 }
 
-.blueIcon {
-  color: #007aff;
+.whiteIcon {
+  color: white; /* Changed from blueIcon */
   cursor: pointer;
   transition: transform 0.2s;
 }
 
-.blueIcon:hover {
+.whiteIcon:hover {
   transform: scale(1.1);
+  color: #fff;
 }
 
 .historySection {

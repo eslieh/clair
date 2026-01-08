@@ -493,28 +493,78 @@
   .checks {
     align-items: flex-start;
   }
+
+  .headline {
+    font-size: 56px;
+  }
 }
 
-@media (max-width: 600px) {
-  .headline {
-    font-size: 48px;
+@media (max-width: 768px) {
+  .nav {
+    display: none; /* Hide top tabs on mobile */
   }
 
-  .ctaTitle {
-    font-size: 40px;
+  .headerInner {
+    padding: 12px 16px;
   }
-  
-  .hero {
-    gap: 40px;
+
+  .headerGhost {
+    display: none; /* Hide secondary CTA text on mobile */
   }
 
   .main {
     padding-top: 100px;
-    gap: 100px;
+    gap: 80px;
+  }
+
+  .headline {
+    font-size: 42px;
+  }
+
+  .subhead {
+    font-size: 17px;
+  }
+
+  .heroCtas {
+    flex-direction: column;
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .heroMeta {
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .sectionTitle {
+    font-size: 32px;
+  }
+
+  .ctaTitle {
+    font-size: 36px;
   }
 
   .ctaCard {
     padding: 60px 24px;
     border-radius: 32px;
+  }
+
+  .footer {
+    padding: 60px 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .headline {
+    font-size: 36px;
+  }
+
+  .sectionTitle {
+    font-size: 28px;
+  }
+
+  .ctaTitle {
+    font-size: 32px;
   }
 }

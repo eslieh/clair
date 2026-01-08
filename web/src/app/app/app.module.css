@@ -80,9 +80,9 @@
 .actionBtnPrimary {
   height: 42px;
   border-radius: 25px;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  background: rgba(42, 209, 74, 0.95);
-  color: rgba(0, 0, 0, 0.86);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: white;
+  color: black;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -566,9 +566,9 @@
   flex: 1;
   height: 42px;
   border-radius: 35px;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  background: rgba(42, 209, 74, 0.95);
-  color: rgba(0, 0, 0, 0.86);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: white;
+  color: black;
   font-weight: 850;
   font-size: 13px;
   cursor: pointer;

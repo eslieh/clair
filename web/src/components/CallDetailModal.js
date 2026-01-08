@@ -78,8 +78,8 @@ export default function CallDetailModal({ item, onClose }) {
           <div className={styles.detailRow}>
             <div className={styles.detailLabel}>FaceTime</div>
             <div className={styles.detailActions}>
-              <Video size={18} className={styles.blueIcon} onClick={() => handleAction('video')} />
-              <Phone size={18} className={styles.blueIcon} onClick={() => handleAction('call')} />
+              <Video size={18} className={styles.whiteIcon} onClick={() => handleAction('video')} />
+              <Phone size={18} className={styles.whiteIcon} onClick={() => handleAction('call')} />
             </div>
           </div>
 

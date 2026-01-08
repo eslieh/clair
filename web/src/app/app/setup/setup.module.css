@@ -36,7 +36,7 @@
 }
 
 .doneBtn {
-  color: #3ccc52; /* Clair Primary Green */
+  color: #fff;
   background: none;
   border: none;
   font-size: 17px;
@@ -92,7 +92,7 @@
 }
 
 .editPhotoBtn {
-  color: #007aff;
+  color: #fff;
   background: none;
   border: none;
   font-size: 15px;
@@ -172,7 +172,7 @@
 
 .spinner {
   animation: rotate 1s linear infinite;
-  color: #3ccc52;
+  color: #fff;
 }
 
 @keyframes rotate {
