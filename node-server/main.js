@@ -16,7 +16,7 @@ webpush.setVapidDetails(
 );
 
 const wss = new WebSocket.Server({ port });
-
+  
 // Map userId -> WebSocket
 const clients = new Map();
 // Map callId -> TimeoutId
