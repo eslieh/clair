@@ -13,6 +13,7 @@ import NewCallModal from "@/components/NewCallModal";
 import CallDetailModal from "@/components/CallDetailModal";
 import CallConfirmModal from "@/components/CallConfirmModal";
 import { getCallHistory } from "@/app/app/calls/actions";
+import { groupCallsByDate } from "@/app/app/calls/utils";
 import styles from "./app.module.css";
 
 export default function AppLayout({ children }) {
