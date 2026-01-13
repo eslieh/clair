@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clair Desktop</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 600px;
+            padding: 40px;
+        }
+
+        .logo {
+            font-size: 64px;
+            margin-bottom: 20px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        h1 {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        p {
+            font-size: 18px;
+            color: #a0a0a0;
+            margin-bottom: 32px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(102, 126, 234, 0.1);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .status {
+            margin-top: 24px;
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="logo">🌌</div>
+        <h1>Clair Desktop</h1>
+        <p>Next-Gen P2P Video Calling</p>
+        <div class="loading"></div>
+        <div class="status">Loading application...</div>
+    </div>
+
+    <script>
+        // Check if Electron API is available
+        if (window.electronAPI) {
+            console.log('Electron API loaded successfully');
+
+            // Get app version and platform
+            Promise.all([
+                window.electronAPI.app.getVersion(),
+                window.electronAPI.app.getPlatform()
+            ]).then(([version, platform]) => {
+                console.log(`Clair Desktop v${version} on ${platform}`);
+            });
+        }
+
+        // In production, this page will be replaced by the Next.js app
+        // This is just a fallback/loading screen
+        setTimeout(() => {
+            document.querySelector('.status').textContent =
+                'If you see this screen, make sure the Next.js dev server is running on http://localhost:3000';
+        }, 3000);
+    </script>
+</body>
+
+</html>

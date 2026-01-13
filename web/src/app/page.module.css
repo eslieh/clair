@@ -526,7 +526,7 @@
   }
 
   .heroCtas {
-    flex-direction: column;
+    flex-direction: row;
     width: 100%;
     max-width: 300px;
   }
@@ -552,6 +552,9 @@
 
   .footer {
     padding: 60px 24px;
+  }
+  .primaryBtn{
+    font-size: 11px;
   }
 }
 
