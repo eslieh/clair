@@ -1,6 +1,7 @@
 const WebSocket = require('ws');
 const { v4: uuidv4 } = require('uuid');
 const webpush = require('web-push');
+const { Expo } = require('expo-server-sdk');
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
@@ -14,6 +15,9 @@ webpush.setVapidDetails(
   process.env.VAPID_PUBLIC_KEY,
   process.env.VAPID_PRIVATE_KEY
 );
+
+// Setup Expo Push (mobile)
+const expo = new Expo();
 
 const wss = new WebSocket.Server({ port });
   
@@ -101,7 +105,7 @@ async function sendPushNotification(userId, data) {
   try {
     const { data: subs, error } = await supabase
       .from('push_subscriptions')
-      .select('subscription')
+      .select('platform, subscription')
       .eq('user_id', userId);
 
     if (error) throw error;
@@ -111,23 +115,58 @@ async function sendPushNotification(userId, data) {
     }
 
     console.log(`[Push] Sending to ${subs.length} subscriptions for ${userId}`);
-    
-    const payload = JSON.stringify({
-      title: data.title || 'Incoming Clair Call',
-      body: data.body || 'Someone is calling you',
+
+    const isMissedCall = data.notificationType === 'missed_call';
+    const title = data.title || 'Incoming Clair Call';
+    const body = data.body || 'Someone is calling you';
+
+    // Deep-link data both clients can use to jump straight into the call.
+    const linkData = {
+      callId: data.callId,
+      calleeId: userId,
+      callerId: data.callerId,
+      callerName: data.callerName || '',
+      avatar_url: data.avatar_url || '',
+      notificationType: data.notificationType || 'incoming_call',
+    };
+
+    const webSubs = subs.filter(s => s.platform !== 'expo');
+    const expoSubs = subs.filter(s => s.platform === 'expo');
+
+    const webPayload = JSON.stringify({
+      title,
+      body,
       icon: data.avatar_url || data.icon || '/favicon.ico',
-      url: data.notificationType === 'missed_call' ? '/app/calls' : `/app/call/${data.callId}?callee=${userId}&callerId=${data.callerId}&callerName=${encodeURIComponent(data.callerName || '')}&callerAvatar=${encodeURIComponent(data.avatar_url || '')}&answering=true`,
+      url: isMissedCall ? '/app/calls' : `/app/call/${data.callId}?callee=${userId}&callerId=${data.callerId}&callerName=${encodeURIComponent(data.callerName || '')}&callerAvatar=${encodeURIComponent(data.avatar_url || '')}&answering=true`,
       notificationType: data.notificationType || 'incoming_call'
     });
 
-    const promises = subs.map(s => 
-      webpush.sendNotification(s.subscription, payload)
+    const webPromises = webSubs.map(s =>
+      webpush.sendNotification(s.subscription, webPayload)
         .catch(err => {
-          console.error('[Push] Single subscription failed:', err.statusCode);
+          console.error('[Push] Web subscription failed:', err.statusCode);
         })
     );
-    
-    await Promise.all(promises);
+
+    const expoMessages = expoSubs
+      .map(s => s.subscription?.token)
+      .filter(token => Expo.isExpoPushToken(token))
+      .map(token => ({
+        to: token,
+        sound: isMissedCall ? undefined : 'default',
+        title,
+        body,
+        priority: 'high',
+        data: linkData,
+      }));
+
+    const expoPromise = expoMessages.length > 0
+      ? expo.sendPushNotificationsAsync(expoMessages).catch(err => {
+          console.error('[Push] Expo push failed:', err);
+        })
+      : Promise.resolve();
+
+    await Promise.all([...webPromises, expoPromise]);
     console.log('[Push] Finished sending all pushes');
   } catch (err) {
     console.error('[Push] Error fetching/sending:', err);

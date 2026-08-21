@@ -220,8 +220,9 @@ export async function savePushSubscription(subscription) {
     .from('push_subscriptions')
     .upsert({
       user_id: user.id,
+      platform: 'web',
       subscription: subscription
-    }, { onConflict: 'user_id' })
+    }, { onConflict: 'user_id,platform' })
 
   if (error) {
     console.error('savePushSubscription error', error)
